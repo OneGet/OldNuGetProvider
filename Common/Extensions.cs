@@ -189,16 +189,8 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             return Convert.FromBase64String(text).ToUtf8String();
         }
 
-        public static bool Is(this string str) {
-            return !string.IsNullOrEmpty(str);
-        }
-
-        public static bool IsEmptyOrNull(this string str) {
-            return string.IsNullOrEmpty(str);
-        }
-
         public static bool IsTrue(this string text) {
-            return text.Is() && text.Equals("true", StringComparison.CurrentCultureIgnoreCase);
+            return !string.IsNullOrEmpty(text) && text.Equals("true", StringComparison.CurrentCultureIgnoreCase);
         }
     }
 }

@@ -609,7 +609,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
                 var file = Path.Combine(pkgTempDir, "{0}install.{1}".format(packageName, "zip"));
                 if (GetChocolateyWebFile(packageName, file, url, url64bit)) {
-                    if (GetChocolateyUnzip(file, unzipLocation, specificFolder, packageName).Is()) {
+                    if (!string.IsNullOrEmpty(GetChocolateyUnzip(file, unzipLocation, specificFolder, packageName))) {
                         Verbose("Package Successfully Installed", packageName);
                         return true;
                     }

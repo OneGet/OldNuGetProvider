@@ -62,7 +62,6 @@
     <Compile Include="Common\PackageItem.cs" />
     <Compile Include="Common\PackageSource.cs" />
     <Compile Include="Common\CommonRequest.cs" />
-    <Compile Include="Common\RequestExtensions.cs" />
     <Compile Include="Nuget\NuGetProvider.cs" />
     <Compile Include="Nuget\NuGetRequest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
