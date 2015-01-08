@@ -67,7 +67,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
         internal IEnumerable<PackageSource> SelectedSources {
             get {
-                var sources = (GetSources() ?? Enumerable.Empty<string>()).ToArray();
+                var sources = (PackageSources ?? Enumerable.Empty<string>()).ToArray();
                 var pkgSources = RegisteredPackageSources;
 
                 if (sources.Length == 0) {
@@ -648,7 +648,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                     var depRefs = dep.VersionSpec == null ? GetPackageById(dep.Id).ToArray() : GetPackageByIdAndVersionSpec(dep.Id, dep.VersionSpec, true).ToArray();
 
                     if (depRefs.Length == 0) {
-                        Error(ErrorCategory.ObjectNotFound, packageItem.GetCanonicalId(this), Constants.Messages.DependencyResolutionError, GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString()));
+                        Error(ErrorCategory.ObjectNotFound, packageItem.GetCanonicalId(this), Constants.Messages.DependencyResolutionError, ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString()));
                         throw new Exception("failed");
                     }
 
@@ -775,9 +775,9 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
             if (results.Status == InstallStatus.Successful) {
                 foreach (var installedPackage in results[InstallStatus.Successful]) {
-                    if (!NotifyPackageInstalled(installedPackage.Id, installedPackage.Version, installedPackage.PackageSource.Name, installedPackage.FullPath)) {
+                    if( IsCanceled ){
                         // the caller has expressed that they are cancelling the install.
-                        Verbose("NotifyPackageInstalled returned false--This is unexpected");
+                        Verbose("Package installation cancelled");
                         // todo: we should probablty uninstall this package unless the user said leave broken stuff behind
                         return false;
                     }
@@ -816,7 +816,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
             if (!String.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
                 if (PreUninstall(pkg)) {
-                    DeleteFolder(pkg.InstalledDirectory, this);
+                    ProviderServices.DeleteFolder(pkg.InstalledDirectory, this);
                 }
                 var result = PostUninstall(pkg);
                 YieldPackage(pkg, pkg.Id);

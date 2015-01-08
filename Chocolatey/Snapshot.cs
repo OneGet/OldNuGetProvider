@@ -29,7 +29,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
             _request = request;
             Folder = folder;
             _request.Verbose("Taking Snapshot", folder);
-            _request.CreateFolder(folder, _request);
+            _request.ProviderServices.CreateFolder(folder, _request);
             _files = Directory.EnumerateFiles(Folder, "*", SearchOption.AllDirectories).ToDictionary(each => each, each => new FileInfo(each), StringComparer.OrdinalIgnoreCase);
         }
 

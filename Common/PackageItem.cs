@@ -114,7 +114,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         internal string GetCanonicalId(CommonRequest request) {
-            return _canonicalId ?? (_canonicalId = request.GetCanonicalPackageId(request.PackageProviderName, Id, Version));
+            return _canonicalId ?? (_canonicalId = request.ProviderServices.GetCanonicalPackageId(request.PackageProviderName, Id, Version));
         }
     }
 }
