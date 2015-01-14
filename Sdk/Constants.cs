@@ -42,7 +42,7 @@ namespace Microsoft.OneGet.NuGetProvider.Sdk {
             public const string InvalidFilename = "MSG:InvalidFilename";
             public const string MissingRequiredParameter = "MSG:MissingRequiredParameter";
             public const string PackageFailedInstall = "MSG:UnableToInstallPackage_package_reason";
-            public const string PackageProviderExists = "MSG:PackageProviderExists";
+            public const string PackageSourceExists = "MSG:PackageSourceExists";
             public const string ProtocolNotSupported = "MSG:ProtocolNotSupported";
             public const string ProviderPluginLoadFailure = "MSG:ProviderPluginLoadFailure";
             public const string ProviderSwidtagUnavailable = "MSG:ProviderSwidtagUnavailable";

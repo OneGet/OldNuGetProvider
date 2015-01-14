@@ -79,7 +79,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
             if (src != null && !isUpdate) {
                 // tell the user that there's one here already
-                request.Error(ErrorCategory.InvalidArgument, name ?? location, Constants.Messages.PackageProviderExists, name ?? location);
+                request.Error(ErrorCategory.InvalidArgument, name ?? location, Constants.Messages.PackageSourceExists, name ?? location);
                 // we're done here.
                 return;
             }
