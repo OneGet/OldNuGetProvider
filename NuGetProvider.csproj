@@ -74,7 +74,7 @@
     <EmbeddedResource Include="Resources\Messages.resx" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="Chocolatey\ChocolateyHelpers.psm1" />
+    <EmbeddedResource Include="Chocolatey\ChocolateyHelpers.psm1" />
     <None Include="oneget.manifest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />

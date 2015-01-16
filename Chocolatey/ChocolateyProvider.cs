@@ -89,6 +89,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
                     request.YieldDynamicOption("SkipDependencies", Constants.OptionType.Switch, false);
                     request.YieldDynamicOption("ContinueOnFailure", Constants.OptionType.Switch, false);
                     request.YieldDynamicOption("ExcludeVersion", Constants.OptionType.Switch, false);
+                    request.YieldDynamicOption("ForceX86", Constants.OptionType.Switch, false);
                     request.YieldDynamicOption("PackageSaveMode", Constants.OptionType.String, false, new[] {
                         "nuspec", "nupkg", "nuspec;nupkg"
                     });

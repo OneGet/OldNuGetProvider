@@ -1,5 +1,5 @@
 ﻿function Get-BinRoot {
-	return $request.GetChocolateyBinRoot();
+	return $request.ChocolateyBinRoot;
 }
 
 function Install-ChocolateyPackage {

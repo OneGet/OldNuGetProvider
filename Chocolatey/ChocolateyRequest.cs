@@ -125,7 +125,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 ".ToByteArray()));
             }
             set {
-                Verbose("Saving Chocolatey Config", ChocolateyConfigPath);
+                Verbose("Saving Chocolatey Config {0}", ChocolateyConfigPath);
 
                 if (value == null) {
                     return;
@@ -299,6 +299,8 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool GetChocolateyWebFile(string packageName, string fileFullPath, string url, string url64bit) {
+            Debug("Calling 'ChocolateyRequest::GetChocolateyWebFile' '{0}','{1}','{2}','{3}' ", packageName, fileFullPath, url, url64bit);
+            
             if (!string.IsNullOrEmpty(url64bit) && Environment.Is64BitOperatingSystem && !ForceX86) {
                 url = url64bit;
             }
@@ -317,7 +319,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyInstallPackage(string packageName, string fileType, string silentArgs, string file, int[] validExitCodes, string workingDirectory) {
-            Verbose("InstallChocolateyInstallPackage", "{0}", packageName);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyInstallPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, fileType, silentArgs, file, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
 
             switch (fileType.ToLowerInvariant()) {
                 case "msi":
@@ -332,6 +334,8 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyPackage(string packageName, string fileType, string silentArgs, string url, string url64bit, int[] validExitCodes, string workingDirectory) {
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyPackage' '{0}','{1}','{2}','{3}','{4}','{5}','{6}' ", packageName, fileType, silentArgs, url, url64bit, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
+
             try {
                 var tempFolder = Path.GetTempPath();
                 ;
@@ -359,7 +363,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
                 }
 
                 if (InstallChocolateyInstallPackage(packageName, fileType, silentArgs, localFile, validExitCodes, workingDirectory)) {
-                    Verbose("Package Successfully Installed", packageName);
+                    Verbose("Package Successfully Installed {0}", packageName);
                     return true;
                 }
                 throw new Exception("Failed Install.");
@@ -378,6 +382,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyPath(string pathToInstall, string context) {
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyPath' '{0}','{1}'", pathToInstall, context);
             if (context.Equals("machine", StringComparison.InvariantCultureIgnoreCase)) {
                 if (IsElevated) {
                     EnvironmentUtility.SystemPath = EnvironmentUtility.SystemPath.Append(pathToInstall).RemoveMissingFolders();
@@ -394,11 +399,12 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public void UpdateSessionEnvironment() {
-            Verbose("Reloading Environment", "");
+            Debug("Calling 'ChocolateyRequest::UpdateSessionEnvironment'");
             EnvironmentUtility.Rehash();
         }
 
         public string GetBatFileLocation(string exe, string name) {
+            Debug("Calling 'ChocolateyRequest::GetBatFileLocation' '{0}','{1}'",exe,name);
             if (string.IsNullOrEmpty(name)) {
                 return Path.Combine(PackageExePath, Path.GetFileNameWithoutExtension(exe) + ".bat");
             } else {
@@ -408,11 +414,14 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Can be called from powershell")]
         public void GeneratePS1ScriptBin(string ps1, string name = null) {
+            Debug("Calling 'ChocolateyRequest::GeneratePS1ScriptBin' '{0}','{1}'", ps1, name);
+
             File.WriteAllText(GetBatFileLocation(ps1, name), @"@echo off
 powershell -NoProfile -ExecutionPolicy unrestricted -Command ""& '{0}'  %*""".format(ps1));
         }
 
         public void GenerateConsoleBin(string exe, string name = null) {
+            Debug("Calling 'ChocolateyRequest::GenerateConsoleBin' '{0}','{1}'", exe, name);
             File.WriteAllText(GetBatFileLocation(exe, name), @"@echo off
 SET DIR=%~dp0%
 cmd /c ""%DIR%{0} %*""
@@ -420,6 +429,7 @@ exit /b %ERRORLEVEL%".format(PackageExePath.RelativePathTo(exe)));
         }
 
         public void GenerateGuiBin(string exe, string name = null) {
+            Debug("Calling 'ChocolateyRequest::GenerateGuiBin' '{0}','{1}'", exe, name);
             File.WriteAllText(GetBatFileLocation(exe, name), @"@echo off
 SET DIR=%~dp0%
 start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
@@ -427,6 +437,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool RemoveBins(string pkgPath) {
+            Debug("Calling 'ChocolateyRequest::RemoveBins' '{0}'", pkgPath);
             var exes = Directory.EnumerateFiles(pkgPath, "*.exe", SearchOption.AllDirectories);
             foreach (var exe in exes) {
                 if (File.Exists(exe + ".ignore")) {
@@ -443,16 +454,19 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public void RemoveConsoleBin(string exe, string name = null) {
+            Debug("Calling 'ChocolateyRequest::RemoveConsoleBin' '{0}','{1}'", exe, name);
             ProviderServices.Delete(GetBatFileLocation(exe, name), this);
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public void RemoveGuiBin(string exe, string name = null) {
+            Debug("Calling 'ChocolateyRequest::RemoveGuiBin' '{0}','{1}'", exe, name);
             ProviderServices.Delete(GetBatFileLocation(exe, name), this);
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyPowershellCommand(string packageName, string psFileFullPath, string url, string url64bit, string workingDirectory) {
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyPowershellCommand' '{0}','{1}','{2}','{3}','{4}'", packageName, psFileFullPath, url, url64bit, workingDirectory);
             if (GetChocolateyWebFile(packageName, psFileFullPath, url, url64bit)) {
                 if (File.Exists(psFileFullPath)) {
                     GeneratePS1ScriptBin(psFileFullPath);
@@ -466,7 +480,8 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyVsixPackage(string packageName, string vsixUrl, string vsVersion) {
-            Verbose("InstallChocolateyVsixPackage", packageName);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyVsixPackage' '{0}','{1}','{2}'",packageName, vsixUrl, vsVersion);
+
             var vs = Registry.LocalMachine.OpenSubKey(@"Software\Wow6432Node\Microsoft\VisualStudio");
             var versions = vs.GetSubKeyNames().Select(each => {
                 float f;
@@ -527,7 +542,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyExplorerMenuItem(string menuKey, string menuLabel, string command, string type) {
-            Verbose("InstallChocolateyExplorerMenuItem", "{0}/{1}/{2}/{3}", menuKey, menuLabel, command, type);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyExplorerMenuItem' '{0}','{1}','{2}','{3}'", menuKey, menuLabel, command, type);
 
             var key = type == "file" ? "*" : (type == "directory" ? "directory" : null);
             if (key == null) {
@@ -548,7 +563,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool UninstallChocolateyPackage(string packageName, string fileType, string silentArgs, string file, int[] validExitCodes, string workingDirectory) {
-            Verbose("UninstallChocolateyPackage", packageName);
+            Debug("Calling 'ChocolateyRequest::UninstallChocolateyPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, fileType, silentArgs, file, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
 
             switch (fileType.ToLowerInvariant()) {
                 case "msi":
@@ -566,7 +581,8 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public string GetChocolateyUnzip(string fileFullPath, string destination, string specificFolder, string packageName) {
-            Verbose("GetChocolateyUnzip", fileFullPath);
+            Debug("Calling 'ChocolateyRequest::GetChocolateyUnzip' '{0}','{1}','{2}','{3}'", fileFullPath, destination, specificFolder, packageName);
+
             try {
                 var zipfileFullPath = fileFullPath;
 
@@ -598,7 +614,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyZipPackage(string packageName, string url, string unzipLocation, string url64bit, string specificFolder, string workingDirectory) {
-            Verbose("InstallChocolateyZipPackage", packageName);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyZipPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, url, unzipLocation, url64bit, specificFolder, workingDirectory);
             try {
                 var tempFolder = Path.GetTempPath();
                 ;
@@ -625,7 +641,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool UnInstallChocolateyZipPackage(string packageName, string zipFileName) {
-            Verbose("UnInstallChocolateyZipPackage", "Package '{0}', ZipFile '{1}'", packageName, zipFileName);
+            Debug("Calling 'ChocolateyRequest::UnInstallChocolateyZipPackage' '{0}','{1}' ", packageName, zipFileName);
             try {
                 var packageLibPath = Environment.GetEnvironmentVariable("ChocolateyPackageFolder");
                 var zipContentFile = Path.Combine(packageLibPath, "{0}.txt".format(Path.GetFileName(zipFileName)));
@@ -643,7 +659,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyFileAssociation(string extension, string executable) {
-            Verbose("InstallChocolateyFileAssociation", "{0} with executable {1}", extension, executable);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyFileAssociation' '{0}','{1}' ", extension, executable);
             if (string.IsNullOrEmpty(executable)) {
                 throw new ArgumentNullException("executable");
             }
@@ -666,7 +682,8 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyPinnedTaskBarItem(string targetFilePath) {
-            Verbose("InstallChocolateyPinnedTaskBarItem", targetFilePath);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyPinnedTaskBarItem' '{0}'", targetFilePath);
+
             if (string.IsNullOrEmpty(targetFilePath)) {
                 Verbose("Failed InstallChocolateyPinnedTaskBarItem -- Empty path");
                 throw new Exception("Failed.");
@@ -678,17 +695,17 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool StartChocolateyProcessAsAdmin(string statements, string exeToRun, bool minimized, bool noSleep, int[] validExitCodes, string workingDirectory) {
-            Verbose("StartChocolateyProcessAsAdmin", "Exe '{0}', Args '{1}'", exeToRun, statements);
+            Debug("Calling 'ChocolateyRequest::XXXX' '{0}','{1}','{2}','{3}','{4}','{5}' ", statements, exeToRun, minimized, noSleep, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
 
             if (exeToRun.EqualsIgnoreCase("powershell")) {
                 // run as a powershell script
                 if (IsElevated) {
-                    Verbose("Already Elevated", "Running PowerShell script in process");
+                    Verbose("Already Elevated - Running PowerShell script in process");
                     // in proc, we're already good.
                     return Invoke(statements);
                 }
 
-                Verbose("Not Elevated", "Running PowerShell script in new process");
+                Verbose("Not Elevated - Running PowerShell script in new process");
                 // otherwise setup a new proc
                 if (!ProviderServices.ExecuteElevatedAction(PackageProviderName, statements, this)) {
                     Debug("Error during elevation");
@@ -699,7 +716,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
             // just a straight exec from here.
             try {
-                Verbose("Launching Process", "EXE :'{0}'", exeToRun);
+                Verbose("Launching Process-EXE :'{0}'", exeToRun);
                 var process = AsyncProcess.Start(new ProcessStartInfo {
                     FileName = exeToRun,
                     Arguments = statements,
@@ -711,7 +728,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
                 while (!process.WaitForExit(1)) {
                     if (IsCanceled) {
                         process.Kill();
-                        Verbose("Process Killed", "Host requested cancellation");
+                        Verbose("Process Killed - Host requested cancellation");
                         throw new Exception("Killed Process {0}".format(exeToRun));
                     }
                 }
@@ -766,5 +783,13 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
             }
             return rip;
         });
+
+        public string ChocolateyBinRoot {
+            get {
+                return Path.Combine(RootInstallationPath, "bin");
+            }
+        }
     }
+
+
 }
