@@ -783,12 +783,6 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
             }
             return rip;
         });
-
-        public string ChocolateyBinRoot {
-            get {
-                return Path.Combine(RootInstallationPath, "bin");
-            }
-        }
     }
 
 
