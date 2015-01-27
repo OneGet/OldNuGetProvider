@@ -1,4 +1,4 @@
-﻿// 
+// 
 //  Copyright (c) Microsoft Corporation. All rights reserved. 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
@@ -19,5 +19,5 @@ using System.Reflection;
 //      Minor Version 
 //      Build Number
 //      Revision
-[assembly: AssemblyVersion("2.8.4.0")]
-[assembly: AssemblyFileVersion("2.8.4.0")]
+[assembly: AssemblyVersion("2.8.4.13")]
+[assembly: AssemblyFileVersion("2.8.4.13")]

@@ -25,6 +25,8 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
     public abstract class CommonProvider {
         public abstract string PackageProviderName {get;}
 
+        // public string ProviderVersion { get { return "1.2.3.4"; } }
+
         /// <summary>
         ///     This is called when the user is adding (or updating) a package source
         ///     If this PROVIDER doesn't support user-defined package sources, remove this method.
