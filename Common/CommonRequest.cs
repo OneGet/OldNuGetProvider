@@ -867,7 +867,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                     // _page = _packages.Skip(_resultIndex).Take(40).ToArray();
                     _page = _nextSet.Result;
                     _resultIndex += _page.Length;
-                    if (_page.Length < 40) {
+                    if (_page.Length == 0) {
                         _done = true;
                     } else {
                         PullNextSet();
