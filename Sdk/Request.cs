@@ -277,7 +277,12 @@ namespace Microsoft.OneGet.NuGetProvider.Sdk {
         }
 
         internal string GetMessageStringInternal(string messageText) {
-            return Messages.ResourceManager.GetString(messageText);
+            try {
+                return Messages.ResourceManager.GetString(messageText);
+            }
+            catch {
+                return null;
+            }
         }
 
         internal string FormatMessageString(string messageText, params object[] args) {
