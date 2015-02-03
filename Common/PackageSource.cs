@@ -13,6 +13,7 @@
 //  
 
 namespace Microsoft.OneGet.NuGetProvider.Common {
+    using System;
     using System.IO;
     using NuGet;
 
@@ -36,7 +37,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal bool IsSourceAFile {
             get {
                 try {
-                    if (!string.IsNullOrEmpty(Location) && File.Exists(Location)) {
+                    if (!string.IsNullOrWhiteSpace(Location) && ((!Uri.IsWellFormedUriString(Location, UriKind.Absolute) || new Uri(Location).IsFile) && File.Exists(Location))) {
                         return true;
                     }
                 } catch {
