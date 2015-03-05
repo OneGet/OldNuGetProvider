@@ -316,62 +316,62 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
         internal bool YieldPackage(PackageItem pkg, string searchKey) {
             try {
-                if (YieldSoftwareIdentity(pkg.FastPath, pkg.Package.Id, pkg.Package.Version.ToString(), "semver", pkg.Package.Summary, pkg.PackageSource.Name, searchKey, pkg.FullPath, pkg.PackageFilename)) {
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "copyright", pkg.Package.Copyright)) {
+                if (YieldSoftwareIdentity(pkg.FastPath, pkg.Package.Id, pkg.Package.Version.ToString(), "semver", pkg.Package.Summary, pkg.PackageSource.Name, searchKey, pkg.FullPath, pkg.PackageFilename) != null) {
+                    if (AddMetadata(pkg.FastPath, "copyright", pkg.Package.Copyright) == null) {
                         return false;
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "description", pkg.Package.Description)) {
+                    if (AddMetadata(pkg.FastPath, "description", pkg.Package.Description) == null) {
                         return false;
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "language", pkg.Package.Language)) {
+                    if (AddMetadata(pkg.FastPath, "language", pkg.Package.Language) == null) {
                         return false;
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "releaseNotes", pkg.Package.ReleaseNotes)) {
+                    if (AddMetadata(pkg.FastPath, "releaseNotes", pkg.Package.ReleaseNotes) == null) {
                         return false;
                     }
                     if (pkg.Package.Published != null) {
                         // published time.
-                        if (!YieldSoftwareMetadata(pkg.FastPath, "published", pkg.Package.Published.ToString())) {
+                        if (AddMetadata(pkg.FastPath, "published", pkg.Package.Published.ToString()) == null) {
                             return false;
                         }
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "tags", pkg.Package.Tags)) {
+                    if (AddMetadata(pkg.FastPath, "tags", pkg.Package.Tags) == null) {
                         return false;
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "title", pkg.Package.Title)) {
+                    if (AddMetadata(pkg.FastPath, "title", pkg.Package.Title) == null) {
                         return false;
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "developmentDependency", pkg.Package.DevelopmentDependency.ToString())) {
+                    if (AddMetadata(pkg.FastPath, "developmentDependency", pkg.Package.DevelopmentDependency.ToString()) == null) {
                         return false;
                     }
-                    if (!YieldSoftwareMetadata(pkg.FastPath, "FromTrustedSource", pkg.PackageSource.Trusted.ToString())) {
+                    if (AddMetadata(pkg.FastPath, "FromTrustedSource", pkg.PackageSource.Trusted.ToString()) == null) {
                         return false;
                     }
                     if (pkg.Package.LicenseUrl != null && !String.IsNullOrEmpty(pkg.Package.LicenseUrl.ToString())) {
-                        if (!YieldLink(pkg.FastPath, pkg.Package.LicenseUrl.ToString(), "license", null, null, null, null, null)) {
+                        if (AddLink(pkg.Package.LicenseUrl, "license", null, null, null, null, null) == null) {
                             return false;
                         }
                     }
                     if (pkg.Package.ProjectUrl != null && !String.IsNullOrEmpty(pkg.Package.ProjectUrl.ToString())) {
-                        if (!YieldLink(pkg.FastPath, pkg.Package.ProjectUrl.ToString(), "project", null, null, null, null, null)) {
+                        if (AddLink(pkg.Package.ProjectUrl, "project", null, null, null, null, null) == null) {
                             return false;
                         }
                     }
                     if (pkg.Package.ReportAbuseUrl != null && !String.IsNullOrEmpty(pkg.Package.ReportAbuseUrl.ToString())) {
-                        if (!YieldLink(pkg.FastPath, pkg.Package.ReportAbuseUrl.ToString(), "abuse", null, null, null, null, null)) {
+                        if (AddLink(pkg.Package.ReportAbuseUrl, "abuse", null, null, null, null, null) == null) {
                             return false;
                         }
                     }
                     if (pkg.Package.IconUrl != null && !String.IsNullOrEmpty(pkg.Package.IconUrl.ToString())) {
-                        if (!YieldLink(pkg.FastPath, pkg.Package.IconUrl.ToString(), "icon", null, null, null, null, null)) {
+                        if (AddLink(pkg.Package.IconUrl, "icon", null, null, null, null, null) == null) {
                             return false;
                         }
                     }
-                    if (pkg.Package.Authors.Any(author => !YieldEntity(pkg.FastPath, author.Trim(), author.Trim(), "author", null))) {
+                    if (pkg.Package.Authors.Any(author => AddEntity(author.Trim(), author.Trim(), "author", null) == null)) {
                         return false;
                     }
 
-                    if (pkg.Package.Owners.Any(owner => !YieldEntity(pkg.FastPath, owner.Trim(), owner.Trim(), "owner", null))) {
+                    if (pkg.Package.Owners.Any(owner => AddEntity(owner.Trim(), owner.Trim(), "owner", null) == null)) {
                         return false;
                     }
                 } else {
