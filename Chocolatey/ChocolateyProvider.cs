@@ -36,12 +36,14 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
             {Constants.Features.MagicSignatures, new[] {Constants.Signatures.Zip}},
         };
 
+        internal const string ProviderName = "Chocolatey";
+
         /// <summary>
         ///     The name of this Package Provider
         /// </summary>
         public override string PackageProviderName {
             get {
-                return "Chocolatey";
+                return ProviderName;
             }
         }
 

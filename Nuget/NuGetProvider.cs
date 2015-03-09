@@ -29,9 +29,11 @@ namespace Microsoft.OneGet.NuGetProvider.Nuget {
             // { Sdk.Constants.Features.AutomationOnly, Constants.FeaturePresent }
         };
 
+        internal const string ProviderName = "NuGet";
+
         public override string PackageProviderName {
             get {
-                return "NuGet";
+                return ProviderName;
             }
         }
 
@@ -59,7 +61,7 @@ namespace Microsoft.OneGet.NuGetProvider.Nuget {
         }
 
         public void GetDynamicOptions(string category, NuGetRequest request) {
-            request.Debug("Calling '{0}::GetDynamicOptions' '{1}'", "NuGet", category);
+            request.Debug("Calling '{0}::GetDynamicOptions' '{1}'", PackageProviderName, category);
 
             switch ((category ?? string.Empty).ToLowerInvariant()) {
                 case "package":

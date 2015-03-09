@@ -317,6 +317,20 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal bool YieldPackage(PackageItem pkg, string searchKey) {
             try {
                 if (YieldSoftwareIdentity(pkg.FastPath, pkg.Package.Id, pkg.Package.Version.ToString(), "semver", pkg.Package.Summary, pkg.PackageSource.Name, searchKey, pkg.FullPath, pkg.PackageFilename) != null) {
+                    
+                    // iterate thru the dependencies and add them to the software identity.
+                    foreach (var depSet in pkg.Package.DependencySets) {
+                        foreach (var dep in depSet.Dependencies) {
+                            
+                            var dependency = AddDependency(PackageProviderName, dep.Id, dep.VersionSpec.ToString(), null, null);
+                            // todo: determine if we can generate an appropriate "appliesTo" for the package.
+
+                            if (IsCanceled) {
+                                return false;
+                            }
+                        }
+                    }
+
                     if (AddMetadata(pkg.FastPath, "copyright", pkg.Package.Copyright) == null) {
                         return false;
                     }
@@ -648,7 +662,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                     var depRefs = dep.VersionSpec == null ? GetPackageById(dep.Id).ToArray() : GetPackageByIdAndVersionSpec(dep.Id, dep.VersionSpec, true).ToArray();
 
                     if (depRefs.Length == 0) {
-                        Error(ErrorCategory.ObjectNotFound, packageItem.GetCanonicalId(this), Constants.Messages.DependencyResolutionError, ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString()));
+                        Error(ErrorCategory.ObjectNotFound, packageItem.GetCanonicalId(this), Constants.Messages.DependencyResolutionError, ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString(),null));
                         throw new Exception("failed");
                     }
 

@@ -316,7 +316,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                 foreach (var dep in depSet.Dependencies) {
                     var depRefs = dep.VersionSpec == null ? request.GetPackageById(dep.Id).ToArray() : request.GetPackageByIdAndVersionSpec(dep.Id, dep.VersionSpec, true).ToArray();
                     if (depRefs.Length == 0) {
-                        request.Error(ErrorCategory.InvalidResult, pkgRef.GetCanonicalId(request), Constants.Messages.DependencyResolutionError, request.ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString()));
+                        request.Error(ErrorCategory.InvalidResult, pkgRef.GetCanonicalId(request), Constants.Messages.DependencyResolutionError, request.ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString(), null));
                     }
                     foreach (var dependencyReference in depRefs) {
                         request.YieldPackage(dependencyReference, pkgRef.Id);

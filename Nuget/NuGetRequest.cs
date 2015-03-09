@@ -33,7 +33,7 @@ namespace Microsoft.OneGet.NuGetProvider.Nuget {
 
         public override string PackageProviderName {
             get {
-                return "Chocolatey";
+                return NuGetProvider.ProviderName;
             }
         }
 
