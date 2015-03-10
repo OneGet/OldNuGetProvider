@@ -42,7 +42,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal ImplictLazy<bool> SkipValidate;
 
         protected CommonRequest() {
-            FilterOnTag = new ImplictLazy<string[]>(() => GetOptionValues("FilterOnTag").ToArray());
+            FilterOnTag = new ImplictLazy<string[]>(() => (GetOptionValues("FilterOnTag") ?? new string[0]).ToArray());
             Contains = new ImplictLazy<string>(() => GetOptionValue("Contains"));
             SkipValidate = new ImplictLazy<bool>(() => GetOptionValue("SkipValidate").IsTrue());
             AllowPrereleaseVersions = new ImplictLazy<bool>(() => GetOptionValue("AllowPrereleaseVersions").IsTrue());
@@ -321,8 +321,8 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                     // iterate thru the dependencies and add them to the software identity.
                     foreach (var depSet in pkg.Package.DependencySets) {
                         foreach (var dep in depSet.Dependencies) {
-                            
-                            var dependency = AddDependency(PackageProviderName, dep.Id, dep.VersionSpec.ToString(), null, null);
+
+                            var dependency = AddDependency(PackageProviderName, dep.Id, dep.VersionSpec == null ? null : dep.VersionSpec.ToString(), null, null);
                             // todo: determine if we can generate an appropriate "appliesTo" for the package.
 
                             if (IsCanceled) {

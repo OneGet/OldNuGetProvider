@@ -185,7 +185,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         /// <returns></returns>
         protected void FindPackageImpl(string name, string requiredVersion, string minimumVersion, string maximumVersion, int id, CommonRequest request) {
             // Nice-to-have put a debug message in that tells what's going on.
-            request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}'", PackageProviderName, requiredVersion, minimumVersion, maximumVersion, id);
+            request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
 
             // get the package by ID first.
             // if there are any packages, yield and return
@@ -201,7 +201,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             // Try searching for matches and returning those.
             request.YieldPackages(request.SearchForPackages(name, requiredVersion, minimumVersion, maximumVersion), name);
 
-            request.Debug("Finished '{0}::FindPackage' '{1}','{2}','{3}','{4}'", PackageProviderName, requiredVersion, minimumVersion, maximumVersion, id);
+            request.Debug("Finished '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
         }
 
         /// <summary>
