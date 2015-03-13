@@ -192,5 +192,20 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         public static bool IsTrue(this string text) {
             return !string.IsNullOrEmpty(text) && text.Equals("true", StringComparison.CurrentCultureIgnoreCase);
         }
+
+        public static string FixVersion(this string versionString) {
+            if (!string.IsNullOrWhiteSpace(versionString)) {
+                if (versionString[0] == '.') {
+                    // make sure we have a leading zero when someone says .5
+                    versionString = "0" + versionString;
+                }
+
+                if (versionString.IndexOf('.') == -1) {
+                    // make sure we make a 1 work like 1.0 
+                    versionString = versionString + ".0";
+                }
+            }
+            return versionString;
+        }
     }
 }

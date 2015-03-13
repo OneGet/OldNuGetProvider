@@ -16,7 +16,9 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
     using System;
     using System.IO;
     using System.Linq;
+    using NuGet;
     using Sdk;
+    using Constants = Sdk.Constants;
 
     /// <summary>
     ///     Given the overlap between how NuGet and Chcolatey work, it seemed prudent to combine these in one Assembly.
@@ -187,6 +189,10 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             // Nice-to-have put a debug message in that tells what's going on.
             request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
 
+            requiredVersion = requiredVersion.FixVersion();
+            minimumVersion = minimumVersion.FixVersion();
+            maximumVersion = maximumVersion.FixVersion();
+
             // get the package by ID first.
             // if there are any packages, yield and return
             if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name)) {
@@ -342,13 +348,23 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         /// <summary>
-        ///     Gets the installed packages
+        /// Returns the packages that are installed
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="request"></param>
-        protected void GetInstalledPackagesImpl(string name, CommonRequest request) {
+        /// <param name="name">the package name to match. Empty or null means match everything</param>
+        /// <param name="requiredVersion">the specific version asked for. If this parameter is specified (ie, not null or empty string) then the minimum and maximum values are ignored</param>
+        /// <param name="minimumVersion">the minimum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
+        /// <param name="maximumVersion">the maximum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
+        /// <param name="request">
+        ///     An object passed in from the CORE that contains functions that can be used to interact with
+        ///     the CORE and HOST
+        /// </param>
+        protected void GetInstalledPackagesImpl(string name, string requiredVersion, string minimumVersion, string maximumVersion, CommonRequest request) {
             // Nice-to-have put a debug message in that tells what's going on.
-            request.Debug("Calling '{0}::GetInstalledPackages' '{1}'", PackageProviderName, name);
+            request.Debug("Calling '{0}::GetInstalledPackages' '{1}','{2}','{3}','{4}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion);
+
+            requiredVersion = requiredVersion.FixVersion();
+            minimumVersion = minimumVersion.FixVersion();
+            maximumVersion = maximumVersion.FixVersion();
 
             // look in the destination directory for directories that contain nupkg files.
             var subdirs = Directory.EnumerateDirectories(request.Destination);
@@ -360,6 +376,18 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
                     if (pkgItem != null && pkgItem.IsInstalled) {
                         if (pkgItem.Id.Equals(name, StringComparison.CurrentCultureIgnoreCase)) {
+                            if (!string.IsNullOrWhiteSpace(requiredVersion)) {
+                                if (pkgItem.Package.Version != new SemanticVersion(requiredVersion)) {
+                                    continue;
+                                }
+                            } else {
+                                if (!string.IsNullOrWhiteSpace(minimumVersion) && pkgItem.Package.Version < new SemanticVersion(minimumVersion)) {
+                                    continue;
+                                }
+                                if (!string.IsNullOrWhiteSpace(maximumVersion) && pkgItem.Package.Version < new SemanticVersion(maximumVersion)) {
+                                    continue;
+                                }
+                            }
                             request.YieldPackage(pkgItem, name);
                             break;
                         }

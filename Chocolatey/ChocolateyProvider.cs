@@ -227,12 +227,18 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
         }
 
         /// <summary>
-        ///     Gets the installed packages
+        /// Returns the packages that are installed
         /// </summary>
-        /// <param name="name"></param>
-        /// <param name="request"></param>
-        public void GetInstalledPackages(string name, ChocolateyRequest request) {
-            GetInstalledPackagesImpl(name, request);
+        /// <param name="name">the package name to match. Empty or null means match everything</param>
+        /// <param name="requiredVersion">the specific version asked for. If this parameter is specified (ie, not null or empty string) then the minimum and maximum values are ignored</param>
+        /// <param name="minimumVersion">the minimum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
+        /// <param name="maximumVersion">the maximum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
+        /// <param name="request">
+        ///     An object passed in from the CORE that contains functions that can be used to interact with
+        ///     the CORE and HOST
+        /// </param>
+        public void GetInstalledPackages(string name, string requiredVersion, string minimumVersion, string maximumVersion, ChocolateyRequest request) {
+            GetInstalledPackagesImpl(name,requiredVersion,minimumVersion,maximumVersion, request);
         }
     }
 }

@@ -289,16 +289,15 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal IEnumerable<IPackage> FilterOnVersion(IEnumerable<IPackage> pkgs, string requiredVersion, string minimumVersion, string maximumVersion) {
             if (!String.IsNullOrEmpty(requiredVersion)) {
                 pkgs = pkgs.Where(each => each.Version == new SemanticVersion(requiredVersion));
-            }
+            } else {
+                if (!String.IsNullOrEmpty(minimumVersion)) {
+                    pkgs = pkgs.Where(each => each.Version >= new SemanticVersion(minimumVersion));
+                }
 
-            if (!String.IsNullOrEmpty(minimumVersion)) {
-                pkgs = pkgs.Where(each => each.Version >= new SemanticVersion(minimumVersion));
+                if (!String.IsNullOrEmpty(maximumVersion)) {
+                    pkgs = pkgs.Where(each => each.Version <= new SemanticVersion(maximumVersion));
+                }
             }
-
-            if (!String.IsNullOrEmpty(maximumVersion)) {
-                pkgs = pkgs.Where(each => each.Version <= new SemanticVersion(maximumVersion));
-            }
-
             return pkgs;
         }
 
