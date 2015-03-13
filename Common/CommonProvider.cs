@@ -299,6 +299,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             }
         }
 
+        /*
         /// <summary>
         ///     Returns package references for all the dependent packages
         /// </summary>
@@ -330,6 +331,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                 }
             }
         }
+        */
 
         /// <summary>
         ///     Finds a package given a local filename
