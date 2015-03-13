@@ -190,9 +190,13 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
 
             requiredVersion = requiredVersion.FixVersion();
-            minimumVersion = minimumVersion.FixVersion();
-            maximumVersion = maximumVersion.FixVersion();
-
+            if (requiredVersion != null) {
+                minimumVersion = null;
+                maximumVersion = null;
+            } else {
+                minimumVersion = minimumVersion.FixVersion();
+                maximumVersion = maximumVersion.FixVersion();
+            }
             // get the package by ID first.
             // if there are any packages, yield and return
             if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name)) {
@@ -364,9 +368,14 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             // Nice-to-have put a debug message in that tells what's going on.
             request.Debug("Calling '{0}::GetInstalledPackages' '{1}','{2}','{3}','{4}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion);
 
-            requiredVersion = requiredVersion.FixVersion();
-            minimumVersion = minimumVersion.FixVersion();
-            maximumVersion = maximumVersion.FixVersion();
+            if (requiredVersion != null) {
+                minimumVersion = null;
+                maximumVersion = null;
+            }
+            else {
+                minimumVersion = minimumVersion.FixVersion();
+                maximumVersion = maximumVersion.FixVersion();
+            }
 
             // look in the destination directory for directories that contain nupkg files.
             var subdirs = Directory.EnumerateDirectories(request.Destination);

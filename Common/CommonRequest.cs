@@ -423,6 +423,22 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
         internal IEnumerable<PackageItem> GetPackageById(PackageSource source, string name, string requiredVersion = null, string minimumVersion = null, string maximumVersion = null, bool allowUnlisted = false) {
             try {
+                if (!string.IsNullOrWhiteSpace(requiredVersion) && requiredVersion.IndexOfAny(new char[] {'[', ']', '(', ')'}) > -1) {
+                    IVersionSpec versionSpec;
+                    if (VersionUtility.TryParseVersionSpec(requiredVersion, out versionSpec)) {
+                        // we've got a IVersionSpec -- we can search with that.
+
+                        // plus, if we're handling a version range like this, we don't want to do any tags or filters.
+                        // so just return this set simply.
+                        return source.Repository.FindPackages(name, versionSpec, AllowPrereleaseVersions, allowUnlisted).Select(pkg => new PackageItem {
+                            Package = pkg,
+                            PackageSource = source,
+                            FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
+                        });
+                    }
+                } 
+
+                // otherwise fall back to traditional behavior
                 var pkgs = source.Repository.FindPackagesById(name);
 
                 if (!AllVersions && (String.IsNullOrEmpty(requiredVersion) && String.IsNullOrEmpty(minimumVersion) && String.IsNullOrEmpty(maximumVersion))) {
@@ -438,6 +454,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                         PackageSource = source,
                         FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
                     });
+                
             } catch (Exception e) {
                 e.Dump(this);
                 return Enumerable.Empty<PackageItem>();
@@ -594,7 +611,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                     packages = src.Search(criteria, AllowPrereleaseVersions);    
                 }
                 */
-
+                
                 var packages = src.Search(criteria, AllowPrereleaseVersions);
 
                 /*
