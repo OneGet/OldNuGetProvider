@@ -184,19 +184,6 @@ namespace Microsoft.OneGet.NuGetProvider.Nuget {
         }
 
         /// <summary>
-        ///     Returns package references for all the dependent packages
-        /// </summary>
-        /// <param name="fastPackageReference"></param>
-        /// <param name="request">
-        ///     An object passed in from the CORE that contains functions that can be used to interact with the
-        ///     CORE and HOST
-        /// </param>
-        /// <returns></returns>
-        public void GetPackageDependencies(string fastPackageReference, NuGetRequest request) {
-            GetPackageDependenciesImpl(fastPackageReference, request);
-        }
-
-        /// <summary>
         ///     Finds a package given a local filename
         /// </summary>
         /// <param name="file"></param>
