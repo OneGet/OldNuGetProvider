@@ -304,7 +304,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         internal string MakeFastPath(PackageSource source, string id, string version) {
-            return String.Format(@"${0}\{1}\{2}\{3}", source.Serialized, id.ToBase64(), version.ToBase64(), Sources.Select(each => each.ToBase64()).SafeAggregate((current, each) => current + "|" + each));
+            return String.Format(@"${0}\{1}\{2}\{3}", source.Serialized, id.ToBase64(), version.ToBase64(), (Sources??new string[0]).Select(each => each.ToBase64()).SafeAggregate((current, each) => current + "|" + each));
         }
 
         public bool TryParseFastPath(string fastPath, out string source, out string id, out string version, out string[] sources) {
