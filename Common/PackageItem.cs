@@ -28,6 +28,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal PackageSource PackageSource {get; set;}
         internal string FastPath {get; set;}
         internal bool IsPackageFile {get; set;}
+        internal string[] Sources { get; set; }
 
         internal string Id {
             get {

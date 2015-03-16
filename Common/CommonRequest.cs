@@ -28,7 +28,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
     public abstract class CommonRequest : Request {
         internal const string MultiplePackagesInstalledExpectedOne = "MSG:MultiplePackagesInstalledExpectedOne_package";
-        private static readonly Regex _rxFastPath = new Regex(@"\$(?<source>[\w,\+,\/,=]*)\\(?<id>[\w,\+,\/,=]*)\\(?<version>[\w,\+,\/,=]*)");
+        private static readonly Regex _rxFastPath = new Regex(@"\$(?<source>[\w,\+,\/,=]*)\\(?<id>[\w,\+,\/,=]*)\\(?<version>[\w,\+,\/,=]*)\\(?<sources>[\w,\+,\/,=]*)");
         private static readonly Regex _rxPkgParse = new Regex(@"'(?<pkgId>\S*)\s(?<ver>.*?)'");
         protected string _configurationFileLocation;
         internal ImplictLazy<bool> AllowPrereleaseVersions;
@@ -65,9 +65,11 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal abstract string Destination {get;}
         internal abstract IDictionary<string, PackageSource> RegisteredPackageSources {get;}
 
+        internal string[] OriginalSources;
+
         internal IEnumerable<PackageSource> SelectedSources {
             get {
-                var sources = (PackageSources ?? Enumerable.Empty<string>()).ToArray();
+                var sources = (OriginalSources ?? Enumerable.Empty<string>()).Union(PackageSources ?? Enumerable.Empty<string>()).ToArray();
                 var pkgSources = RegisteredPackageSources;
 
                 if (sources.Length == 0) {
@@ -302,14 +304,16 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         internal string MakeFastPath(PackageSource source, string id, string version) {
-            return String.Format(@"${0}\{1}\{2}", source.Serialized, id.ToBase64(), version.ToBase64());
+            return String.Format(@"${0}\{1}\{2}\{3}", source.Serialized, id.ToBase64(), version.ToBase64(), Sources.Select(each => each.ToBase64()).SafeAggregate((current, each) => current + "|" + each));
         }
 
-        public bool TryParseFastPath(string fastPath, out string source, out string id, out string version) {
+        public bool TryParseFastPath(string fastPath, out string source, out string id, out string version, out string[] sources) {
             var match = _rxFastPath.Match(fastPath);
             source = match.Success ? match.Groups["source"].Value.FromBase64() : null;
             id = match.Success ? match.Groups["id"].Value.FromBase64() : null;
             version = match.Success ? match.Groups["version"].Value.FromBase64() : null;
+            var srcs = match.Success ? match.Groups["sources"].Value: string.Empty;
+            sources = srcs.Split('|').Select(each => each.FromBase64()).ToArray();
             return match.Success;
         }
 
@@ -508,8 +512,9 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             string sourceLocation;
             string id;
             string version;
+            string[] sources;
 
-            if (TryParseFastPath(fastPath, out sourceLocation, out id, out version)) {
+            if (TryParseFastPath(fastPath, out sourceLocation, out id, out version, out sources)) {
                 var source = ResolvePackageSource(sourceLocation);
 
                 if (source.IsSourceAFile) {
@@ -523,6 +528,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                         FastPath = fastPath,
                         PackageSource = source,
                         Package = pkg,
+                        Sources = sources
                     };
                 }
             }
@@ -672,6 +678,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         internal IEnumerable<PackageItem> GetUninstalledPackageDependencies(PackageItem packageItem) {
+            
             foreach (var depSet in packageItem.Package.DependencySets) {
                 foreach (var dep in depSet.Dependencies) {
                     // get all the packages that match this dependency
@@ -765,20 +772,24 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             }
 
             return SelectedSources.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).SelectMany(source => {
-                var pkgs = source.Repository.FindPackages(name, versionSpec, AllowPrereleaseVersions, allowUnlisted);
+                try {
+                    var pkgs = source.Repository.FindPackages(name, versionSpec, AllowPrereleaseVersions, allowUnlisted);
 
-                /*
+                    /*
                 // necessary?
                 pkgs = from p in pkgs where p.IsLatestVersion select p;
                 */
 
-                var pkgs2 = pkgs.ToArray();
+                    var pkgs2 = pkgs.ToArray();
 
-                return pkgs2.Select(pkg => new PackageItem {
-                    Package = pkg,
-                    PackageSource = source,
-                    FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
-                });
+                    return pkgs2.Select(pkg => new PackageItem {
+                        Package = pkg,
+                        PackageSource = source,
+                        FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
+                    });
+                } catch {
+                    return new PackageItem[0];
+                }
             }).OrderByDescending(each => each.Package.Version);
         }
 
