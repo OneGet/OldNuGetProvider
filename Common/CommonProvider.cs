@@ -231,6 +231,9 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                 return;
             }
 
+            // need to make sure that the original package's sources list is tried first.
+            request.OriginalSources = pkgRef.Sources;
+
             var dependencies = request.GetUninstalledPackageDependencies(pkgRef).Reverse().ToArray();
             int progressId = 0;
 
