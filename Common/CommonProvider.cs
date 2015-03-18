@@ -190,13 +190,22 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
 
             requiredVersion = requiredVersion.FixVersion();
-            if (requiredVersion != null) {
-                minimumVersion = null;
-                maximumVersion = null;
+            if (!string.IsNullOrEmpty(requiredVersion)) {
+                if (request.FindByCanonicalId && requiredVersion.IndexOfAny("()[],".ToCharArray()) == -1) {
+                    // when resolving packages via a canonical id, treat a lone version (ie  1.0  ->  1.0 <= x) string as a nuget version range:
+                    minimumVersion = requiredVersion;
+                    maximumVersion = null;
+                    requiredVersion = null;
+                } else {
+                    minimumVersion = null;
+                    maximumVersion = null;
+                }
             } else {
                 minimumVersion = minimumVersion.FixVersion();
                 maximumVersion = maximumVersion.FixVersion();
             }
+
+
             // get the package by ID first.
             // if there are any packages, yield and return
             if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name)) {
