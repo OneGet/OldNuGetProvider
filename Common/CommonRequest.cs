@@ -36,6 +36,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal ImplictLazy<string> Contains;
         internal ImplictLazy<bool> ContinueOnFailure;
         internal ImplictLazy<bool> ExcludeVersion;
+        internal ImplictLazy<bool> FindByCanonicalId;
         internal ImplictLazy<string[]> FilterOnTag;
         internal ImplictLazy<string> PackageSaveMode;
         internal ImplictLazy<bool> SkipDependencies;
@@ -50,6 +51,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
             SkipDependencies = new ImplictLazy<bool>(() => GetOptionValue("SkipDependencies").IsTrue());
             ContinueOnFailure = new ImplictLazy<bool>(() => GetOptionValue("ContinueOnFailure").IsTrue());
             ExcludeVersion = new ImplictLazy<bool>(() => GetOptionValue("ExcludeVersion").IsTrue());
+            FindByCanonicalId = new ImplictLazy<bool>(() => GetOptionValue("FindByCanonicalId").IsTrue());
             PackageSaveMode = new ImplictLazy<string>(() => {
                 var sm = GetOptionValue("PackageSaveMode");
                 if (string.IsNullOrEmpty(sm)) {
@@ -563,7 +565,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                     IEnumerable<string> packageIds = null;
                     using (var p = AsyncProcess.Start(NuGetExePath, String.Format(@"list ""{0}"" -Source ""{1}"" ", searchTerm, source.Location))) {
                         packageIds = p.StandardOutput.Where(each => !String.IsNullOrEmpty(each)).Select(l => {
-                            Verbose("NuGet: {0}", l);
+                            Debug("NuGet: {0}", l);
                             if (l.Contains("No packages found.")) {
                                 return null;
                             }
