@@ -1,18 +1,18 @@
-// 
-//  Copyright (c) Microsoft Corporation. All rights reserved. 
+//
+//  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//  
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//  
+//
 
-namespace Microsoft.OneGet.NuGetProvider.Common {
+namespace Microsoft.PackageManagement.NuGetProvider.Common {
     using System;
     using System.Collections;
     using System.Collections.Generic;
@@ -84,7 +84,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
 
                 // otherwise, return packaeg sources that match the items given.
                 foreach (var src in sources) {
-                    // check to see if we have a source with either that name 
+                    // check to see if we have a source with either that name
                     // or that URI first.
                     if (pkgSources.ContainsKey(src)) {
                         yield return pkgSources[src];
@@ -322,7 +322,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         internal bool YieldPackage(PackageItem pkg, string searchKey) {
             try {
                 if (YieldSoftwareIdentity(pkg.FastPath, pkg.Package.Id, pkg.Package.Version.ToString(), "semver", pkg.Package.Summary, pkg.PackageSource.Name, searchKey, pkg.FullPath, pkg.PackageFilename) != null) {
-                    
+
                     // iterate thru the dependencies and add them to the software identity.
                     foreach (var depSet in pkg.Package.DependencySets) {
                         foreach (var dep in depSet.Dependencies) {
@@ -442,7 +442,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                             FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
                         });
                     }
-                } 
+                }
 
                 // otherwise fall back to traditional behavior
                 var pkgs = source.Repository.FindPackagesById(name);
@@ -460,7 +460,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                         PackageSource = source,
                         FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
                     });
-                
+
             } catch (Exception e) {
                 e.Dump(this);
                 return Enumerable.Empty<PackageItem>();
@@ -616,10 +616,10 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                 if (src is IServiceBasedRepository) {
                     packages = (src as IServiceBasedRepository).Search(criteria, new string[0], AllowPrereleaseVersions);
                 } else {
-                    packages = src.Search(criteria, AllowPrereleaseVersions);    
+                    packages = src.Search(criteria, AllowPrereleaseVersions);
                 }
                 */
-                
+
                 var packages = src.Search(criteria, AllowPrereleaseVersions);
 
                 /*
@@ -659,7 +659,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         public bool IsPackageInstalled(string name, string version) {
-#if find_installed_packages_with_nuspec 
+#if find_installed_packages_with_nuspec
 
             var nuspecs = from pkgFile in Directory.EnumerateFileSystemEntries(Destination, "*.nuspec", SearchOption.AllDirectories) select pkgFile ;
 
@@ -680,7 +680,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
         }
 
         internal IEnumerable<PackageItem> GetUninstalledPackageDependencies(PackageItem packageItem) {
-            
+
             foreach (var depSet in packageItem.Package.DependencySets) {
                 foreach (var dep in depSet.Dependencies) {
                     // get all the packages that match this dependency
@@ -825,7 +825,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                         return false;
                     }
 
-                    // run any extra steps 
+                    // run any extra steps
                     if (!PostInstall(installedPackage)) {
                         // package failed installation. uninstall it.
                         UninstallPackage(installedPackage);

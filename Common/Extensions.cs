@@ -1,18 +1,18 @@
-// 
-//  Copyright (c) Microsoft Corporation. All rights reserved. 
+//
+//  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//  
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//  
+//
 
-namespace Microsoft.OneGet.NuGetProvider.Common {
+namespace Microsoft.PackageManagement.NuGetProvider.Common {
     using System;
     using System.Collections.Generic;
     using System.IO;
@@ -77,8 +77,8 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                 // is this a unc path?
                 if (string.IsNullOrEmpty(pathUri.Host)) {
                     // no, this is a drive:\path path
-                    // use API to resolve out the drive letter to see if it is a remote 
-                    var drive = pathUri.Segments[1].Replace('/', '\\'); // the zero segment is always just '/' 
+                    // use API to resolve out the drive letter to see if it is a remote
+                    var drive = pathUri.Segments[1].Replace('/', '\\'); // the zero segment is always just '/'
 
                     var sb = new StringBuilder(512);
                     var size = sb.Capacity;
@@ -90,7 +90,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                         }
                     }
                 }
-                // not a remote (or resovably-remote) path or 
+                // not a remote (or resovably-remote) path or
                 // it is already a path that is in it's correct form (via localpath)
                 return pathUri.LocalPath;
             } catch (UriFormatException) {
@@ -201,7 +201,7 @@ namespace Microsoft.OneGet.NuGetProvider.Common {
                 }
 
                 if (versionString.IndexOf('.') == -1) {
-                    // make sure we make a 1 work like 1.0 
+                    // make sure we make a 1 work like 1.0
                     versionString = versionString + ".0";
                 }
             }

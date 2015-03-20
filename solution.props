@@ -8,7 +8,7 @@
     <BaseIntermediateOutputPath>$(SolutionRootDir)intermediate\$(TargetFrameworkVersion.Replace(".",""))\$(Configuration)\$(AssemblyName)\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath> 
     <DocumentationFile>$(OutputPath)$(AssemblyName).XML</DocumentationFile> 
-    <SET_MT_EXE>for /f "delims=" %25%25a in ('powershell "$p = ((Get-ItemProperty -Path HKCU:\Software\OneGet\tools\MT.EXE -Name Path -ea 0).Path) ;  if( -not $p ) { $p = ((dir ${env:ProgramFiles(x86)} -recurse -ea 0|  where -property name -eq mt.exe | select -first 1 ).FullName) ;    $null = mkdir -Path HKCU:\Software\OneGet\tools\MT.EXE -Force ;    $null = New-ItemProperty -Path HKCU:\Software\OneGet\tools\MT.EXE -Name Path -Value $p -force } ; $p"') do @set MTEXE=%25%25a</SET_MT_EXE>
+    <SET_MT_EXE>for /f "delims=" %25%25a in ('powershell "$p = ((Get-ItemProperty -Path HKCU:\Software\PackageManagement\tools\MT.EXE -Name Path -ea 0).Path) ;  if( -not $p ) { $p = ((dir ${env:ProgramFiles(x86)} -recurse -ea 0|  where -property name -eq mt.exe | select -first 1 ).FullName) ;    $null = mkdir -Path HKCU:\Software\PackageManagement\tools\MT.EXE -Force ;    $null = New-ItemProperty -Path HKCU:\Software\PackageManagement\tools\MT.EXE -Name Path -Value $p -force } ; $p"') do @set MTEXE=%25%25a</SET_MT_EXE>
 
     <!-- Defaults to .Net 4.0 -->
     <TargetFrameworkVersion Condition="$(TargetFrameworkVersion) == '' Or $(TargetFrameworkVersion) == '*Undefined*'">v4.5</TargetFrameworkVersion>
