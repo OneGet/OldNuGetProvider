@@ -1,24 +1,24 @@
-﻿// 
-//  Copyright (c) Microsoft Corporation. All rights reserved. 
+﻿//
+//  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//  
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//  
+//
 
-namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
+namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
     public static class ChocolateyScript {
 #if FALSE
     /// <summary>
     /// This creates an RPC server that has endpoints for all the HostAPIs, then creates an elevated process that can call back into this process to report progress.
-    /// 
-    /// 
+    ///
+    ///
     /// </summary>
     /// <param name="script"></param>
     /// <returns></returns>
@@ -31,7 +31,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
             ChannelServices.RegisterChannel(serverChannel, true);
             // RemotingConfiguration.RegisterWellKnownServiceType( typeof(CommonRequest), "Request", WellKnownObjectMode.Singleton);
             var objRef = RemotingServices.Marshal(_request);
-            
+
             // Create the client elevated
             var process = AsyncProcess.Start(new ProcessStartInfo {
                 FileName = CommonRequest.NuGetExePath,
@@ -49,7 +49,7 @@ namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
             return 0;
         }
 
-        
+
         public void Invoke(string command, params string[] arguments) {
             var p = PowerShell.Create();
             p.Runspace.SessionStateProxy.SetVariable("request", _request);

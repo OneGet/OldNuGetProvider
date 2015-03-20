@@ -1,4 +1,4 @@
 
-NuGet and Chocolatey OneGet Provider
+NuGet Provider for OneGet PackageManagement
 ====
 

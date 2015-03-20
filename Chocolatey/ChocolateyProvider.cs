@@ -1,30 +1,30 @@
-// 
-//  Copyright (c) Microsoft Corporation. All rights reserved. 
+//
+//  Copyright (c) Microsoft Corporation. All rights reserved.
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//  
+//
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//  
+//
 
-namespace Microsoft.OneGet.NuGetProvider.Chocolatey {
+namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
     using System.Collections.Generic;
     using Common;
     using Sdk;
 
     /// <summary>
-    ///     Chocolatey Package provider for OneGet.
+    ///     Chocolatey Package provider for PackageManagement.
     ///     Important notes:
     ///     - Required Methods: Not all methods are required; some package providers do not support some features. If the
     ///     methods isn't used or implemented it should be removed (or commented out)
     ///     - Error Handling: Avoid throwing exceptions from these methods. To properly return errors to the user, use the
     ///     request.Error(...) method to notify the user of an error conditionm and then return.
-    ///     - Communicating with the HOST and CORE: each method takes a IRequest 
+    ///     - Communicating with the HOST and CORE: each method takes a IRequest
     ///     - use the <code><![CDATA[ .As<Request>() ]]></code> extension method to strongly-type it to the Request type (which
     ///     calls upon the duck-typer to generate a strongly-typed wrapper).  The strongly-typed wrapper also implements
     ///     several helper functions to make using the request object easier.

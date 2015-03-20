@@ -663,24 +663,24 @@ function Get-ProcessorBits {
 function Write-Debug {
 	param(
 		[Parameter(Position=0,Mandatory=$false,ValueFromPipeline=$true)][object] $Message,
-		[Parameter()][switch] $NoNewLine,                              # Deprecating -- messages must go thru OneGet's channels
-		[Parameter(Mandatory=$false)][ConsoleColor] $ForegroundColor,  # Deprecating -- messages must go thru OneGet's channels
-		[Parameter(Mandatory=$false)][ConsoleColor] $BackgroundColor,  # Deprecating -- messages must go thru OneGet's channels
+		[Parameter()][switch] $NoNewLine,                              # Deprecating -- 
+		[Parameter(Mandatory=$false)][ConsoleColor] $ForegroundColor,  # Deprecating -- 
+		[Parameter(Mandatory=$false)][ConsoleColor] $BackgroundColor,  # Deprecating -- 
 		[Parameter(Mandatory=$false)][Object] $Separator    
 	)
-	# just forward to the OneGet Verbose channel. (Chocolatey didn't mean 'debug')
+	# just forward to the Verbose channel. (Chocolatey didn't mean 'debug')
 	$request.Verbose(  $Message , $Separator );
 }
 
 function Write-Verbose {
 	param(
 		[Parameter(Position=0,Mandatory=$false,ValueFromPipeline=$true)][object] $Message,
-		[Parameter()][switch] $NoNewLine,                              # Deprecating -- messages must go thru OneGet's channels
-		[Parameter(Mandatory=$false)][ConsoleColor] $ForegroundColor,  # Deprecating -- messages must go thru OneGet's channels
-		[Parameter(Mandatory=$false)][ConsoleColor] $BackgroundColor,  # Deprecating -- messages must go thru OneGet's channels
+		[Parameter()][switch] $NoNewLine,                              # Deprecating -- 
+		[Parameter(Mandatory=$false)][ConsoleColor] $ForegroundColor,  # Deprecating -- 
+		[Parameter(Mandatory=$false)][ConsoleColor] $BackgroundColor,  # Deprecating -- 
 		[Parameter(Mandatory=$false)][Object] $Separator    
 	)
-	# just forward to the OneGet Verbose channel. (Chocolatey didn't mean 'debug')
+	# just forward to the Verbose channel. (Chocolatey didn't mean 'debug')
 	$request.Verbose(  $Message , $Separator );
 }
 
@@ -696,7 +696,7 @@ function Write-Error {
 		[Parameter(Mandatory=$false)][string] $CategoryTargetType,
 		[Parameter(Mandatory=$false)][string] $RecommendedAction
 	)
-	# forward to the OneGet error channel.
+	# forward to the error channel.
   	$request.Error( $Category, $Message );
 
 	# todo: what are we doing with the rest of the parameters? More Messages?
@@ -705,12 +705,12 @@ function Write-Error {
 function Write-Host {
 	param(
 		[Parameter(Position=0,Mandatory=$false,ValueFromPipeline=$true, ValueFromRemainingArguments=$true)][object] $Object,
-		[Parameter()][switch] $NoNewLine,								# Deprecating -- messages must go thru OneGet's channels
-		[Parameter(Mandatory=$false)][ConsoleColor] $ForegroundColor,   # Deprecating -- messages must go thru OneGet's channels
-		[Parameter(Mandatory=$false)][ConsoleColor] $BackgroundColor,   # Deprecating -- messages must go thru OneGet's channels
+		[Parameter()][switch] $NoNewLine,								# Deprecating -- 
+		[Parameter(Mandatory=$false)][ConsoleColor] $ForegroundColor,   # Deprecating -- 
+		[Parameter(Mandatory=$false)][ConsoleColor] $BackgroundColor,   # Deprecating -- 
 		[Parameter(Mandatory=$false)][Object] $Separator
 	)
-	# just forward to the OneGet Verbose channel.
+	# just forward to the Verbose channel.
 	# Writing objects is reseved for output.
 	$request.Verbose(  $Message , $Separator );
 }
