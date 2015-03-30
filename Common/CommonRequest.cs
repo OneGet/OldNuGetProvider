@@ -315,7 +315,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             id = match.Success ? match.Groups["id"].Value.FromBase64() : null;
             version = match.Success ? match.Groups["version"].Value.FromBase64() : null;
             var srcs = match.Success ? match.Groups["sources"].Value : string.Empty;
-            sources = srcs.Split('|').Select(each => each.FromBase64()).ToArray();
+            sources = srcs.Split('|').Select(each => each.FromBase64()).Where(each => !string.IsNullOrWhiteSpace(each)).ToArray();
             return match.Success;
         }
 

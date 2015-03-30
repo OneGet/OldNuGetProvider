@@ -349,14 +349,18 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
                 if (!string.IsNullOrEmpty(url64bit) && Environment.Is64BitOperatingSystem && !ForceX86) {
                     url = url64bit;
                 }
+                string localFile = null;
 
-                var localFile = url.CanonicalizePath(!string.IsNullOrWhiteSpace(workingDirectory));
+                try {
+                    localFile = url.CanonicalizePath(!string.IsNullOrWhiteSpace(workingDirectory));
 
-                // check to see if the url is a local file
-                if (!localFile.FileExists()) {
-                    localFile = null;
+                    // check to see if the url is a local file
+                    if (!localFile.FileExists()) {
+                        localFile = null;
+                    }
+                } catch {
+                    // not a local file.
                 }
-
                 if (string.IsNullOrEmpty(localFile)) {
                     localFile = Path.Combine(pkgTempDir, "{0}install.{1}".format(packageName, fileType));
                     if (!GetChocolateyWebFile(packageName, localFile, url, url64bit)) {
