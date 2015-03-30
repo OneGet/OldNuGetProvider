@@ -325,7 +325,11 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             //} else {
             if ("runas".Equals(startInfo.Verb)) {
                 redirecting = false;
-                startInfo.UseShellExecute = true;
+
+                startInfo.Arguments = string.Format("/c {0} {1}", startInfo.FileName, startInfo.Arguments);
+                startInfo.FileName = "cmd.exe";
+
+                startInfo.UseShellExecute = false;
                 startInfo.RedirectStandardError = false;
                 startInfo.RedirectStandardOutput = false;
             }
