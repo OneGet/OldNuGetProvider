@@ -1,16 +1,16 @@
-//
-//  Copyright (c) Microsoft Corporation. All rights reserved.
+// 
+//  Copyright (c) Microsoft Corporation. All rights reserved. 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//
+//  
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//
+//  
 
 namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
     using System.Collections.Generic;
@@ -30,13 +30,13 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
     ///     several helper functions to make using the request object easier.
     /// </summary>
     public class ChocolateyProvider : CommonProvider {
+        internal const string ProviderName = "Chocolatey";
+
         internal static readonly Dictionary<string, string[]> Features = new Dictionary<string, string[]> {
             {Constants.Features.SupportedSchemes, new[] {"http", "https", "file"}},
             {Constants.Features.SupportedExtensions, new[] {"nupkg"}},
             {Constants.Features.MagicSignatures, new[] {Constants.Signatures.Zip}},
         };
-
-        internal const string ProviderName = "Chocolatey";
 
         /// <summary>
         ///     The name of this Package Provider
@@ -96,14 +96,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
                         "nuspec", "nupkg", "nuspec;nupkg"
                     });
                     break;
-            }
-        }
-
-        public void ExecuteElevatedAction(string payload, ChocolateyRequest request) {
-            // Nice-to-have put a debug message in that tells what's going on.
-            request.Debug("Calling '{0}::ExecuteElevatedAction' '{1}'", PackageProviderName, payload);
-            if (!request.Invoke(payload)) {
-                request.Error(ErrorCategory.InvalidResult, "Chocolatey Install Script", Constants.Messages.PackageFailedInstall);
             }
         }
 
@@ -214,18 +206,27 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
         }
 
         /// <summary>
-        /// Returns the packages that are installed
+        ///     Returns the packages that are installed
         /// </summary>
         /// <param name="name">the package name to match. Empty or null means match everything</param>
-        /// <param name="requiredVersion">the specific version asked for. If this parameter is specified (ie, not null or empty string) then the minimum and maximum values are ignored</param>
-        /// <param name="minimumVersion">the minimum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
-        /// <param name="maximumVersion">the maximum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
+        /// <param name="requiredVersion">
+        ///     the specific version asked for. If this parameter is specified (ie, not null or empty
+        ///     string) then the minimum and maximum values are ignored
+        /// </param>
+        /// <param name="minimumVersion">
+        ///     the minimum version of packages to return . If the <code>requiredVersion</code> parameter
+        ///     is specified (ie, not null or empty string) this should be ignored
+        /// </param>
+        /// <param name="maximumVersion">
+        ///     the maximum version of packages to return . If the <code>requiredVersion</code> parameter
+        ///     is specified (ie, not null or empty string) this should be ignored
+        /// </param>
         /// <param name="request">
         ///     An object passed in from the CORE that contains functions that can be used to interact with
         ///     the CORE and HOST
         /// </param>
         public void GetInstalledPackages(string name, string requiredVersion, string minimumVersion, string maximumVersion, ChocolateyRequest request) {
-            GetInstalledPackagesImpl(name,requiredVersion,minimumVersion,maximumVersion, request);
+            GetInstalledPackagesImpl(name, requiredVersion, minimumVersion, maximumVersion, request);
         }
     }
 }

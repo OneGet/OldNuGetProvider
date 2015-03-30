@@ -1,16 +1,16 @@
-//
-//  Copyright (c) Microsoft Corporation. All rights reserved.
+// 
+//  Copyright (c) Microsoft Corporation. All rights reserved. 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//
+//  
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//
+//  
 
 namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
     using System;
@@ -131,7 +131,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
                     return;
                 }
 
-                ProviderServices.CreateFolder(Path.GetDirectoryName(ChocolateyConfigPath), this);
+                CreateFolder(Path.GetDirectoryName(ChocolateyConfigPath));
                 value.Save(ChocolateyConfigPath);
             }
         }
@@ -140,7 +140,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
             get {
                 var path = Path.Combine(RootInstallationPath, "lib");
                 if (!Directory.Exists(path)) {
-                    ProviderServices.CreateFolder(path, this);
+                    CreateFolder(path);
                 }
                 return path;
             }
@@ -150,7 +150,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
             get {
                 var path = Path.Combine(RootInstallationPath, "bin");
                 if (!Directory.Exists(path)) {
-                    ProviderServices.CreateFolder(path, this);
+                    CreateFolder(path);
                 }
                 return Path.Combine(RootInstallationPath, "bin");
             }
@@ -310,7 +310,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
             var uri = new Uri(url);
 
             ProviderServices.DownloadFile(uri, fileFullPath, this);
-            if (string.IsNullOrEmpty(fileFullPath) || !ProviderServices.FileExists(fileFullPath)) {
+            if (string.IsNullOrEmpty(fileFullPath) || !fileFullPath.FileExists()) {
                 throw new Exception("Failed to download file {0}".format(url));
             }
 
@@ -319,7 +319,8 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyInstallPackage(string packageName, string fileType, string silentArgs, string file, int[] validExitCodes, string workingDirectory) {
-            Debug("Calling 'ChocolateyRequest::InstallChocolateyInstallPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, fileType, silentArgs, file, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyInstallPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, fileType, silentArgs, file,
+                validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
 
             switch (fileType.ToLowerInvariant()) {
                 case "msi":
@@ -334,24 +335,25 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyPackage(string packageName, string fileType, string silentArgs, string url, string url64bit, int[] validExitCodes, string workingDirectory) {
-            Debug("Calling 'ChocolateyRequest::InstallChocolateyPackage' '{0}','{1}','{2}','{3}','{4}','{5}','{6}' ", packageName, fileType, silentArgs, url, url64bit, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyPackage' '{0}','{1}','{2}','{3}','{4}','{5}','{6}' ", packageName, fileType, silentArgs, url, url64bit,
+                validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
 
             try {
                 var tempFolder = Path.GetTempPath();
                 ;
                 var chocTempDir = Path.Combine(tempFolder, "chocolatey");
                 var pkgTempDir = Path.Combine(chocTempDir, packageName);
-                ProviderServices.Delete(pkgTempDir, this);
-                ProviderServices.CreateFolder(pkgTempDir, this);
+                Delete(pkgTempDir);
+                CreateFolder(pkgTempDir);
 
                 if (!string.IsNullOrEmpty(url64bit) && Environment.Is64BitOperatingSystem && !ForceX86) {
                     url = url64bit;
                 }
 
-                var localFile = ProviderServices.CanonicalizePath(url, workingDirectory);
+                var localFile = url.CanonicalizePath(!string.IsNullOrWhiteSpace(workingDirectory));
 
                 // check to see if the url is a local file
-                if (!ProviderServices.FileExists(localFile)) {
+                if (!localFile.FileExists()) {
                     localFile = null;
                 }
 
@@ -404,7 +406,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Chocolatey {
         }
 
         public string GetBatFileLocation(string exe, string name) {
-            Debug("Calling 'ChocolateyRequest::GetBatFileLocation' '{0}','{1}'",exe,name);
+            Debug("Calling 'ChocolateyRequest::GetBatFileLocation' '{0}','{1}'", exe, name);
             if (string.IsNullOrEmpty(name)) {
                 return Path.Combine(PackageExePath, Path.GetFileNameWithoutExtension(exe) + ".bat");
             } else {
@@ -455,13 +457,13 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public void RemoveConsoleBin(string exe, string name = null) {
             Debug("Calling 'ChocolateyRequest::RemoveConsoleBin' '{0}','{1}'", exe, name);
-            ProviderServices.Delete(GetBatFileLocation(exe, name), this);
+            Delete(GetBatFileLocation(exe, name));
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public void RemoveGuiBin(string exe, string name = null) {
             Debug("Calling 'ChocolateyRequest::RemoveGuiBin' '{0}','{1}'", exe, name);
-            ProviderServices.Delete(GetBatFileLocation(exe, name), this);
+            Delete(GetBatFileLocation(exe, name));
         }
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
@@ -480,7 +482,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool InstallChocolateyVsixPackage(string packageName, string vsixUrl, string vsVersion) {
-            Debug("Calling 'ChocolateyRequest::InstallChocolateyVsixPackage' '{0}','{1}','{2}'",packageName, vsixUrl, vsVersion);
+            Debug("Calling 'ChocolateyRequest::InstallChocolateyVsixPackage' '{0}','{1}','{2}'", packageName, vsixUrl, vsVersion);
 
             var vs = Registry.LocalMachine.OpenSubKey(@"Software\Wow6432Node\Microsoft\VisualStudio");
             var versions = vs.GetSubKeyNames().Select(each => {
@@ -563,7 +565,8 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
         [SuppressMessage("Microsoft.Performance", "CA1811:AvoidUncalledPrivateCode", Justification = "Required.")]
         public bool UninstallChocolateyPackage(string packageName, string fileType, string silentArgs, string file, int[] validExitCodes, string workingDirectory) {
-            Debug("Calling 'ChocolateyRequest::UninstallChocolateyPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, fileType, silentArgs, file, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each), workingDirectory);
+            Debug("Calling 'ChocolateyRequest::UninstallChocolateyPackage' '{0}','{1}','{2}','{3}','{4}','{5}' ", packageName, fileType, silentArgs, file, validExitCodes.Select(each => each.ToString()).SafeAggregate((current, each) => current + "," + each),
+                workingDirectory);
 
             switch (fileType.ToLowerInvariant()) {
                 case "msi":
@@ -592,7 +595,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
                 if (!string.IsNullOrEmpty(packageName)) {
                     var packageLibPath = Environment.GetEnvironmentVariable("ChocolateyPackageFolder");
-                    ProviderServices.CreateFolder(packageLibPath, this);
+                    CreateFolder(packageLibPath);
                     var zipFileName = Path.GetFileName(zipfileFullPath);
                     var zipExtractLogFullPath = Path.Combine(packageLibPath, "{0}.txt".format(zipFileName));
                     var snapshot = new Snapshot(this, destination);
@@ -620,8 +623,8 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
                 ;
                 var chocTempDir = Path.Combine(tempFolder, "chocolatey");
                 var pkgTempDir = Path.Combine(chocTempDir, packageName);
-                ProviderServices.Delete(pkgTempDir, this);
-                ProviderServices.CreateFolder(pkgTempDir, this);
+                Delete(pkgTempDir);
+                CreateFolder(pkgTempDir);
 
                 var file = Path.Combine(pkgTempDir, "{0}install.{1}".format(packageName, "zip"));
                 if (GetChocolateyWebFile(packageName, file, url, url64bit)) {
@@ -647,7 +650,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
                 var zipContentFile = Path.Combine(packageLibPath, "{0}.txt".format(Path.GetFileName(zipFileName)));
                 if (File.Exists(zipContentFile)) {
                     foreach (var file in File.ReadAllLines(zipContentFile).Where(each => !string.IsNullOrEmpty(each) && File.Exists(each))) {
-                        ProviderServices.DeleteFile(file, this);
+                        Delete(file);
                     }
                 }
             } catch (Exception e) {
@@ -689,7 +692,7 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
                 throw new Exception("Failed.");
             }
 
-            ProviderServices.AddPinnedItemToTaskbar(Path.GetFullPath(targetFilePath), this);
+            AddPinnedItemToTaskbar(Path.GetFullPath(targetFilePath));
             return true;
         }
 
@@ -707,11 +710,8 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
 
                 Verbose("Not Elevated - Running PowerShell script in new process");
                 // otherwise setup a new proc
-                if (!ProviderServices.ExecuteElevatedAction(PackageProviderName, statements, this)) {
-                    Debug("Error during elevation");
-                    return false;
-                }
-                return true;
+                Error(ErrorCategory.InvalidOperation, statements, "Unable to elevate process (this prototype can't do that right now)");
+                return false;
             }
 
             // just a straight exec from here.
@@ -784,6 +784,4 @@ start """" ""%DIR%{0}"" %*".format(PackageExePath.RelativePathTo(exe)));
             return rip;
         });
     }
-
-
 }

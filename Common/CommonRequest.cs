@@ -1,16 +1,16 @@
-//
-//  Copyright (c) Microsoft Corporation. All rights reserved.
+// 
+//  Copyright (c) Microsoft Corporation. All rights reserved. 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//
+//  
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//
+//  
 
 namespace Microsoft.PackageManagement.NuGetProvider.Common {
     using System;
@@ -23,6 +23,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
     using System.Threading.Tasks;
     using NuGet;
     using Sdk;
+    using Utility.Platform;
     using Constants = Sdk.Constants;
     using ErrorCategory = Sdk.ErrorCategory;
 
@@ -36,8 +37,9 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         internal ImplictLazy<string> Contains;
         internal ImplictLazy<bool> ContinueOnFailure;
         internal ImplictLazy<bool> ExcludeVersion;
-        internal ImplictLazy<bool> FindByCanonicalId;
         internal ImplictLazy<string[]> FilterOnTag;
+        internal ImplictLazy<bool> FindByCanonicalId;
+        internal string[] OriginalSources;
         internal ImplictLazy<string> PackageSaveMode;
         internal ImplictLazy<bool> SkipDependencies;
         internal ImplictLazy<bool> SkipValidate;
@@ -66,8 +68,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         protected abstract string ConfigurationFileLocation {get;}
         internal abstract string Destination {get;}
         internal abstract IDictionary<string, PackageSource> RegisteredPackageSources {get;}
-
-        internal string[] OriginalSources;
 
         internal IEnumerable<PackageSource> SelectedSources {
             get {
@@ -306,7 +306,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         }
 
         internal string MakeFastPath(PackageSource source, string id, string version) {
-            return String.Format(@"${0}\{1}\{2}\{3}", source.Serialized, id.ToBase64(), version.ToBase64(), (Sources??new string[0]).Select(each => each.ToBase64()).SafeAggregate((current, each) => current + "|" + each));
+            return String.Format(@"${0}\{1}\{2}\{3}", source.Serialized, id.ToBase64(), version.ToBase64(), (Sources ?? new string[0]).Select(each => each.ToBase64()).SafeAggregate((current, each) => current + "|" + each));
         }
 
         public bool TryParseFastPath(string fastPath, out string source, out string id, out string version, out string[] sources) {
@@ -314,7 +314,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             source = match.Success ? match.Groups["source"].Value.FromBase64() : null;
             id = match.Success ? match.Groups["id"].Value.FromBase64() : null;
             version = match.Success ? match.Groups["version"].Value.FromBase64() : null;
-            var srcs = match.Success ? match.Groups["sources"].Value: string.Empty;
+            var srcs = match.Success ? match.Groups["sources"].Value : string.Empty;
             sources = srcs.Split('|').Select(each => each.FromBase64()).ToArray();
             return match.Success;
         }
@@ -322,11 +322,9 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         internal bool YieldPackage(PackageItem pkg, string searchKey) {
             try {
                 if (YieldSoftwareIdentity(pkg.FastPath, pkg.Package.Id, pkg.Package.Version.ToString(), "semver", pkg.Package.Summary, pkg.PackageSource.Name, searchKey, pkg.FullPath, pkg.PackageFilename) != null) {
-
                     // iterate thru the dependencies and add them to the software identity.
                     foreach (var depSet in pkg.Package.DependencySets) {
                         foreach (var dep in depSet.Dependencies) {
-
                             var dependency = AddDependency(PackageProviderName, dep.Id, dep.VersionSpec == null ? null : dep.VersionSpec.ToString(), null, null);
                             // todo: determine if we can generate an appropriate "appliesTo" for the package.
 
@@ -460,7 +458,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                         PackageSource = source,
                         FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
                     });
-
             } catch (Exception e) {
                 e.Dump(this);
                 return Enumerable.Empty<PackageItem>();
@@ -680,14 +677,13 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         }
 
         internal IEnumerable<PackageItem> GetUninstalledPackageDependencies(PackageItem packageItem) {
-
             foreach (var depSet in packageItem.Package.DependencySets) {
                 foreach (var dep in depSet.Dependencies) {
                     // get all the packages that match this dependency
                     var depRefs = dep.VersionSpec == null ? GetPackageById(dep.Id).ToArray() : GetPackageByIdAndVersionSpec(dep.Id, dep.VersionSpec, true).ToArray();
 
                     if (depRefs.Length == 0) {
-                        Error(ErrorCategory.ObjectNotFound, packageItem.GetCanonicalId(this), Constants.Messages.DependencyResolutionError, ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString(),null));
+                        Error(ErrorCategory.ObjectNotFound, packageItem.GetCanonicalId(this), Constants.Messages.DependencyResolutionError, ProviderServices.GetCanonicalPackageId(PackageProviderName, dep.Id, ((object)dep.VersionSpec ?? "").ToString(), null));
                         throw new Exception("failed");
                     }
 
@@ -818,7 +814,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
 
             if (results.Status == InstallStatus.Successful) {
                 foreach (var installedPackage in results[InstallStatus.Successful]) {
-                    if( IsCanceled ){
+                    if (IsCanceled) {
                         // the caller has expressed that they are cancelling the install.
                         Verbose("Package installation cancelled");
                         // todo: we should probablty uninstall this package unless the user said leave broken stuff behind
@@ -859,13 +855,102 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
 
             if (!String.IsNullOrEmpty(dir) && Directory.Exists(dir)) {
                 if (PreUninstall(pkg)) {
-                    ProviderServices.DeleteFolder(pkg.InstalledDirectory, this);
+                    DeleteFolder(pkg.InstalledDirectory);
                 }
                 var result = PostUninstall(pkg);
                 YieldPackage(pkg, pkg.Id);
                 return result;
             }
             return true;
+        }
+
+        public void AddPinnedItemToTaskbar(string item) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::AddPinnedItemToTaskbar'");
+                ShellApplication.Pin(item);
+            }
+        }
+
+        public void RemovePinnedItemFromTaskbar(string item) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::RemovePinnedItemFromTaskbar'");
+                ShellApplication.Unpin(item);
+            }
+        }
+
+        public void CreateShortcutLink(string linkPath, string targetPath, string description, string workingDirectory, string arguments) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::CreateShortcutLink'");
+
+                if (File.Exists(linkPath)) {
+                    Verbose("Creating Shortcut '{0}' => '{1}'", linkPath, targetPath);
+                    ShellLink.CreateShortcut(linkPath, targetPath, description, workingDirectory, arguments);
+                }
+                Error(ErrorCategory.InvalidData, targetPath, Constants.Messages.UnableToCreateShortcutTargetDoesNotExist, targetPath);
+            }
+        }
+
+        public void CopyFile(string sourcePath, string destinationPath) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::CopyFile'");
+                if (sourcePath == null) {
+                    throw new ArgumentNullException("sourcePath");
+                }
+                if (destinationPath == null) {
+                    throw new ArgumentNullException("destinationPath");
+                }
+                if (File.Exists(destinationPath)) {
+                    destinationPath.TryHardToDelete();
+                    if (File.Exists(destinationPath)) {
+                        Error(ErrorCategory.OpenError, destinationPath, Constants.Messages.UnableToOverwriteExistingFile, destinationPath);
+                    }
+                }
+                File.Copy(sourcePath, destinationPath);
+                if (!File.Exists(destinationPath)) {
+                    Error(ErrorCategory.InvalidResult, destinationPath, Constants.Messages.UnableToCopyFileTo, destinationPath);
+                }
+            }
+        }
+
+        public void Delete(string path) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::Delete'");
+                if (String.IsNullOrWhiteSpace(path)) {
+                    return;
+                }
+
+                path.TryHardToDelete();
+            }
+        }
+
+        public void DeleteFolder(string folder) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::DeleteFolder' {0}".format(folder));
+                if (String.IsNullOrWhiteSpace(folder)) {
+                    return;
+                }
+                if (Directory.Exists(folder)) {
+                    folder.TryHardToDelete();
+                }
+            }
+        }
+
+        public void CreateFolder(string folder) {
+            if (!IsCanceled) {
+                Debug("Calling 'ProviderService::CreateFolder'");
+
+                if (!Directory.Exists(folder)) {
+                    try {
+                        Directory.CreateDirectory(folder);
+                        Verbose("CreateFolder Success {0}", folder);
+                        return;
+                    } catch (Exception e) {
+                        Error(ErrorCategory.InvalidResult, folder, Constants.Messages.CreatefolderFailed, folder, e.Message);
+                        return;
+                    }
+                }
+                Verbose("CreateFolder -- Already Exists {0}", folder);
+            }
         }
 
         internal class PackagesEnumerable : IEnumerable<IPackage> {

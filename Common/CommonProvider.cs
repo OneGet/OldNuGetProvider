@@ -1,16 +1,16 @@
-//
-//  Copyright (c) Microsoft Corporation. All rights reserved.
+// 
+//  Copyright (c) Microsoft Corporation. All rights reserved. 
 //  Licensed under the Apache License, Version 2.0 (the "License");
 //  you may not use this file except in compliance with the License.
 //  You may obtain a copy of the License at
 //  http://www.apache.org/licenses/LICENSE-2.0
-//
+//  
 //  Unless required by applicable law or agreed to in writing, software
 //  distributed under the License is distributed on an "AS IS" BASIS,
 //  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 //  See the License for the specific language governing permissions and
 //  limitations under the License.
-//
+//  
 
 namespace Microsoft.PackageManagement.NuGetProvider.Common {
     using System;
@@ -26,7 +26,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
     /// </summary>
     public abstract class CommonProvider {
         public abstract string PackageProviderName {get;}
-
         // public string ProviderVersion { get { return "1.2.3.4"; } }
 
         /// <summary>
@@ -205,7 +204,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 maximumVersion = maximumVersion.FixVersion();
             }
 
-
             // get the package by ID first.
             // if there are any packages, yield and return
             if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name)) {
@@ -366,12 +364,21 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         }
 
         /// <summary>
-        /// Returns the packages that are installed
+        ///     Returns the packages that are installed
         /// </summary>
         /// <param name="name">the package name to match. Empty or null means match everything</param>
-        /// <param name="requiredVersion">the specific version asked for. If this parameter is specified (ie, not null or empty string) then the minimum and maximum values are ignored</param>
-        /// <param name="minimumVersion">the minimum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
-        /// <param name="maximumVersion">the maximum version of packages to return . If the <code>requiredVersion</code> parameter is specified (ie, not null or empty string) this should be ignored</param>
+        /// <param name="requiredVersion">
+        ///     the specific version asked for. If this parameter is specified (ie, not null or empty
+        ///     string) then the minimum and maximum values are ignored
+        /// </param>
+        /// <param name="minimumVersion">
+        ///     the minimum version of packages to return . If the <code>requiredVersion</code> parameter
+        ///     is specified (ie, not null or empty string) this should be ignored
+        /// </param>
+        /// <param name="maximumVersion">
+        ///     the maximum version of packages to return . If the <code>requiredVersion</code> parameter
+        ///     is specified (ie, not null or empty string) this should be ignored
+        /// </param>
         /// <param name="request">
         ///     An object passed in from the CORE that contains functions that can be used to interact with
         ///     the CORE and HOST
@@ -383,8 +390,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             if (requiredVersion != null) {
                 minimumVersion = null;
                 maximumVersion = null;
-            }
-            else {
+            } else {
                 minimumVersion = minimumVersion.FixVersion();
                 maximumVersion = maximumVersion.FixVersion();
             }
