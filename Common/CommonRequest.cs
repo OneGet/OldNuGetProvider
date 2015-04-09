@@ -82,20 +82,33 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                     yield break;
                 }
 
-                // otherwise, return packaeg sources that match the items given.
+                // we don't want to return duplicate sources
+                HashSet<string> usedPkgSourceKeys = new HashSet<string>();
+
+                // otherwise, return package sources that match the items given
                 foreach (var src in sources) {
                     // check to see if we have a source with either that name
                     // or that URI first.
-                    if (pkgSources.ContainsKey(src)) {
-                        yield return pkgSources[src];
-                        continue;
+                    if (pkgSources.ContainsKey(src))
+                    {
+                        if (!usedPkgSourceKeys.Contains(src))
+                        {
+                            usedPkgSourceKeys.Add(src);
+                            yield return pkgSources[src];
+                            continue;
+                        }
                     }
 
                     var srcLoc = src;
                     var found = false;
-                    foreach (var byLoc in pkgSources.Values.Where(each => each.Location == srcLoc)) {
-                        yield return byLoc;
-                        found = true;
+                    foreach (var byLoc in pkgSources.Where(each => each.Value.Location == srcLoc))
+                    {
+                        if (!usedPkgSourceKeys.Contains(byLoc.Key))
+                        {
+                            usedPkgSourceKeys.Add(byLoc.Key);
+                            yield return byLoc.Value;
+                            found = true;
+                        }
                     }
                     if (found) {
                         continue;
