@@ -16,6 +16,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
     using System;
     using System.IO;
     using System.Linq;
+    using System.Collections.Generic;
     using NuGet;
     using Sdk;
     using Constants = Sdk.Constants;
@@ -206,7 +207,10 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
 
             // get the package by ID first.
             // if there are any packages, yield and return
-            if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name)) {
+            IEnumerable<PackageItem> pkgs = request.GetPackageById(name);
+            if (!pkgs.IsEmpty())
+            {                
+                request.YieldPackages(request.FilterPackageByVersion(pkgs, requiredVersion, minimumVersion, maximumVersion), name);                
                 return;
             }
 
@@ -214,10 +218,9 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             if (request.IsCanceled) {
                 return;
             }
-
+            
             // Try searching for matches and returning those.
             request.YieldPackages(request.SearchForPackages(name, requiredVersion, minimumVersion, maximumVersion), name);
-
             request.Debug("Finished '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
         }
 
