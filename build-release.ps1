@@ -1,3 +1,5 @@
+# make sure the outercurve package is installed
+libs\nuget.exe restore
 
 # make sure that we don't have a test version registered in the registry
 mkdir hkcu:software\Microsoft\PackageManagement -ea silentlycontinue

@@ -1,8 +1,16 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="12.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-  <Import Project="$(MSBuildThisFileDirectory)packages\Outercurve.MSBuildTasks.1.0.0.1\build\Outercurve.MSBuildTasks.tasks" />
+  <Import Condition="Exists( '$(MSBuildThisFileDirectory)packages\Outercurve.MSBuildTasks.1.0.0.1\build\Outercurve.MSBuildTasks.tasks' )" Project="$(MSBuildThisFileDirectory)packages\Outercurve.MSBuildTasks.1.0.0.1\build\Outercurve.MSBuildTasks.tasks" />
   <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
   <PropertyGroup>
+    <PSVersion>$(registry:HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\PowerShell\3\PowerShellEngine@PowerShellVersion)</PSVersion>
+    <!-- 
+        If you have PowerShell 5.0 or greater installed, you must compile this with .NET 4.5 or higher
+        otherwise, we'll assume .Net 4.0 for the assemblies.
+    -->
+    <TargetFrameworkVersion Condition="($(PSVersion.Substring(0,1)) &gt; 4) AND ($(TargetFrameworkVersion) == '' Or $(TargetFrameworkVersion) == '*Undefined*')">v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion Condition="($(PSVersion.Substring(0,1)) &lt; 5) AND ($(TargetFrameworkVersion) == '' Or $(TargetFrameworkVersion) == '*Undefined*')">v4.0</TargetFrameworkVersion>
+  
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6EE48B32-D449-47A5-B69F-B2D8E9BAD867}</ProjectGuid>
@@ -17,9 +25,7 @@
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)intermediate\$(TargetFrameworkVersion.Replace(".",""))\$(Configuration)\$(AssemblyName)\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DocumentationFile>$(OutputPath)$(AssemblyName).XML</DocumentationFile>
-    <!-- Defaults to .Net 4.0 -->
-    <TargetFrameworkVersion Condition="$(TargetFrameworkVersion) == '' Or $(TargetFrameworkVersion) == '*Undefined*'">v4.0</TargetFrameworkVersion>
-    <TargetFrameworkVersion>v4.0</TargetFrameworkVersion>
+    
     <Prefer32Bit>false</Prefer32Bit>
     <NoWarn>1591,3002,3003,3008,3009</NoWarn>
     <RestorePackages>true</RestorePackages>
@@ -33,7 +39,6 @@
     <DefineConstants>$(DefineConstants);DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\Garrett\AppData\Local\Temp\vs13C9.tmp\Debug\</IntermediateOutputPath>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -41,7 +46,6 @@
     <DefineConstants>TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
-    <IntermediateOutputPath>C:\Users\Garrett\AppData\Local\Temp\vs13C9.tmp\Release\</IntermediateOutputPath>
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="nuget, Version=2.8.50926.602, Culture=neutral, processorArchitecture=x86">
