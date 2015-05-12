@@ -31,6 +31,11 @@
     <RestorePackages>true</RestorePackages>
     <DefineConstants>FRAMEWORK$(TargetFrameworkVersion.Replace(".",""))</DefineConstants>
     <OutputRelativePath>output\$(TargetFrameworkVersion.Replace(".",""))\$(Configuration)\bin\</OutputRelativePath>
+    
+    <StartAction>Program</StartAction>
+    <StartProgram>c:\windows\system32\windowspowerShell\v1.0\powershell.exe</StartProgram>
+    <StartArguments>-noexit %24debugPreference = %27Continue%27 %3b get-packageprovider -verbose</StartArguments>
+
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
