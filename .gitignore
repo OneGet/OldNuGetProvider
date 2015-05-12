@@ -98,3 +98,4 @@ policheck*
 *.orig.sln
 *pingme*
 .nuget
+outercurve.signing.password.txt
