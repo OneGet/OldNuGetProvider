@@ -181,7 +181,7 @@
     <PowerShell ScriptBlock="$(AfterBuildScript)">
       <Output PropertyName="outputFile" TaskParameter="Outputs" />
     </PowerShell>
-    <SetSignature Condition="Exists( '$(MSBuildThisFileDirectory)outercurve.signing.password.txt') AND '$(outputFile)' != '' " InputFiles="$(outputFile)" OutputDir="$(SignedDir)" StrongName="false" ContinueOnError="false" ServiceUrl="http://api.outercurve.org" UserName="gserack" Password="$([System.IO.File]::ReadAllText($(MSBuildThisFileDirectory)outercurve.signing.password.txt))" />
+    <SetSignature Condition="'$(OUTERCURVE_TOKEN)' != '' AND '$(outputFile)' != '' " InputFiles="$(outputFile)" OutputDir="$(SignedDir)" StrongName="false" ContinueOnError="false" ServiceUrl="http://api.outercurve.org" UserName="gserack" Password="$(OUTERCURVE_TOKEN)" />
   </Target>
   <UsingTask TaskName="PowerShell" TaskFactory="CodeTaskFactory" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.v12.0.dll">
     <ParameterGroup>
