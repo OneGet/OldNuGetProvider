@@ -205,6 +205,11 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 maximumVersion = maximumVersion.FixVersion();
             }
 
+            if (!IsValidVersionRange(minimumVersion, maximumVersion))
+            {
+                request.Error(ErrorCategory.InvalidArgument, minimumVersion+maximumVersion, Constants.Messages.InvalidVersionRange, minimumVersion, maximumVersion);
+                return;             
+            }
             // get the package by ID first.
             // if there are any packages, yield and return
             IEnumerable<PackageItem> pkgs = request.GetPackageById(name);
@@ -222,6 +227,16 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             // Try searching for matches and returning those.
             request.YieldPackages(request.SearchForPackages(name, requiredVersion, minimumVersion, maximumVersion), name);
             request.Debug("Finished '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
+        }
+
+        internal bool IsValidVersionRange(string minimumVersion, string maximumVersion)
+        {
+            if (!(String.IsNullOrEmpty(minimumVersion) || String.IsNullOrEmpty(maximumVersion)))
+            {
+                if (new SemanticVersion(minimumVersion) > new SemanticVersion(maximumVersion))
+                    return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -396,6 +411,12 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             } else {
                 minimumVersion = minimumVersion.FixVersion();
                 maximumVersion = maximumVersion.FixVersion();
+            }
+
+            if (!IsValidVersionRange(minimumVersion, maximumVersion))
+            {
+                request.Error(ErrorCategory.InvalidArgument, minimumVersion + maximumVersion, Constants.Messages.InvalidVersionRange, minimumVersion, maximumVersion);
+                return;
             }
 
             // look in the destination directory for directories that contain nupkg files.
