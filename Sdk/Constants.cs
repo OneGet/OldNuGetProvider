@@ -55,6 +55,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Sdk {
             public const string UnableToOverwriteExistingFile = "MSG:UnableToOverwriteExistingFile";
             public const string UnableToRemoveFile = "MSG:UnableToRemoveFile";
             public const string UnableToResolvePackage = "MSG:UnableToResolvePackage";
+            public const string InvalidVersionRange = "MSG:InvalidVersionRange";
             public const string UnableToResolveSource = "MSG:UnableToResolveSource_NameOrLocation";
             public const string UnableToUninstallPackage = "MSG:UnableToUninstallPackage";
             public const string UnknownFolderId = "MSG:UnknownFolderId";
