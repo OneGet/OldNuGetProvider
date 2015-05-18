@@ -114,7 +114,26 @@
       erase -force -ea silentlycontinue "$(TargetDir)nuget-anycpu-*.exe"
       
       # make sure the signed output folder is created
+      rmdir -force -recurse -ea silentlycontinue "$(SignedDir)"
       mkdir -force -ea silentlycontinue "$(SignedDir)"
+      
+      if ( $env:APPVEYOR_BUILD_VERSION ) {
+        $v = $env:APPVEYOR_BUILD_VERSION
+        
+        $filepath = resolve-path  "$(MSBuildThisFileDirectory)\assembly-version.cs"
+        $content = (get-content -raw $filepath ) 
+        $content = $content -replace "assembly: AssemblyVersion.*","assembly: AssemblyVersion(`"$v`")]"
+        $content = $content -replace "assembly: AssemblyFileVersion.*","assembly: AssemblyFileVersion(`"$v`")]"
+        set-content $filepath $content
+        
+        $filepath = resolve-path  "$(MSBuildThisFileDirectory)\provider.manifest"
+        $content = (get-content -raw $filepath ) 
+        $content = $content -replace "version='.*'","version='$v'"
+        $content = $content -replace "uniqueId='.*'","uniqueId='nuget.$v'"
+        $content = $content -replace "providerVersion='.*'","providerVersion='$v'"
+        $content = $content -replace "href='.*'","href='https://oneget.org/nuget-anycpu-$v.exe'"
+        set-content $filepath $content
+      }
       
       # unregister any previously compiled assembly
       mkdir hkcu:software\Microsoft\PackageManagement -ea silentlycontinue
@@ -166,6 +185,7 @@
         $null =  .\tools\ILMerge.exe /targetplatform:"v4,$frameworkPath" /out:$outputFile  /log:.\ilrepack.log /allowDup /ver:$version /attr:$(TargetDir)Microsoft.PackageManagement.NuGetProvider.dll  $(TargetDir)nuget.exe  $(TargetDir)Microsoft.PackageManagement.NuGetProvider.dll 
       
         if( test-path $outputFile  ) {
+          copy (resolve-path  "$(MSBuildThisFileDirectory)\provider.manifest") "$(SignedDir)nuget-$version.package.swidtag"
           return $outputFile 
         }
         return $null
