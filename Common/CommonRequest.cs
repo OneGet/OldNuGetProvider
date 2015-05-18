@@ -453,6 +453,8 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             return foundPackage;
         }
 
+        internal bool FoundPackageById;
+
         internal IEnumerable<PackageItem> GetPackageById(PackageSource source, string name, string requiredVersion = null, string minimumVersion = null, string maximumVersion = null, bool allowUnlisted = false) {
             try {
                 if (!string.IsNullOrWhiteSpace(requiredVersion) && requiredVersion.IndexOfAny(new char[] {'[', ']', '(', ')'}) > -1) {
@@ -470,38 +472,33 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                     }
                 }
 
-                // otherwise fall back to traditional behavior
-                var pkgs = source.Repository.FindPackagesById(name);
-                pkgs = FilterOnContains(pkgs);
-                pkgs = FilterOnTags(pkgs);                
-                return FilterPackageByVersion(source, pkgs.Select(pkg => new PackageItem {
-                        Package = pkg,
-                        PackageSource = source,
-                        FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
-                    }), requiredVersion, minimumVersion, maximumVersion);                
-                
+                // otherwise fall back to traditional behavior 
+                // search by package id without version
+                // then apply whatever filters are required.
+                IEnumerable<IPackage> pkgs = source.Repository.FindPackagesById(name).ReEnumerable();
+                if (pkgs.Any()){
+                    // this meas that we actually found an exact package name match, which is important
+                    // so we can not do a search later.
+                    FoundPackageById = true;
+
+                    if (!AllVersions && (String.IsNullOrEmpty(requiredVersion) && String.IsNullOrEmpty(minimumVersion) && String.IsNullOrEmpty(maximumVersion))) {  
+                        pkgs = from p in pkgs where p.IsLatestVersion select p;  
+                    }  
+  
+                    pkgs = FilterOnContains(pkgs);  
+                    pkgs = FilterOnTags(pkgs);
+                    
+                    return FilterOnVersion(pkgs, requiredVersion, minimumVersion, maximumVersion)
+                        .Select(pkg => new PackageItem {
+                              Package = pkg,  
+                              PackageSource = source,  
+                              FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())  
+                        });
+                }
             } catch (Exception e) {
                 e.Dump(this);
-                return Enumerable.Empty<PackageItem>();
             }
-        }
-        
-        internal IEnumerable<PackageItem> GetPackageById(PackageSource source, string name) {
-            try
-            {
-                var pkgs = source.Repository.FindPackagesById(name);
-                pkgs = FilterOnContains(pkgs);
-                pkgs = FilterOnTags(pkgs);
-                return pkgs.Select(pkg => new PackageItem {
-                    Package = pkg,
-                    PackageSource = source,
-                    FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
-                });  
-            }
-            catch (Exception e) {
-                e.Dump(this);
-                return Enumerable.Empty<PackageItem>();
-            }            
+            return Enumerable.Empty<PackageItem>();
         }
 
         internal IEnumerable<PackageItem> GetPackageById(string name, string requiredVersion = null, string minimumVersion = null, string maximumVersion = null, bool allowUnlisted = false) {
@@ -509,34 +506,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 return Enumerable.Empty<PackageItem>();
             }
             return SelectedSources.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).SelectMany(source => GetPackageById(source, name, requiredVersion, minimumVersion, maximumVersion, allowUnlisted));
-        }
-        
-        internal IEnumerable<PackageItem> GetPackageById(string name) {
-            if (String.IsNullOrEmpty(name)) {
-                return Enumerable.Empty<PackageItem>();
-            }
-            return SelectedSources.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).SelectMany(source => GetPackageById(source, name));
-        }
-        
-        internal IEnumerable<PackageItem> FilterPackageByVersion(IEnumerable<PackageItem> pkgs, string requiredVersion = null, string minimumVersion = null, string maximumVersion = null) {
-            if (pkgs == null || pkgs.IsEmpty()) {
-                return Enumerable.Empty<PackageItem>();
-            }
-            return SelectedSources.AsParallel().WithMergeOptions(ParallelMergeOptions.NotBuffered).SelectMany(source => FilterPackageByVersion(source, pkgs.Where(pkg => pkg.PackageSource.Equals(source)), requiredVersion, minimumVersion, maximumVersion));
-        }
-        
-        internal IEnumerable<PackageItem> FilterPackageByVersion(PackageSource source, IEnumerable<PackageItem> pkgs, string requiredVersion = null, string minimumVersion = null, string maximumVersion = null) {
-            try {
-                if (!AllVersions && (String.IsNullOrEmpty(requiredVersion) && String.IsNullOrEmpty(minimumVersion) && String.IsNullOrEmpty(maximumVersion))) {
-                    pkgs = from p in pkgs where  p.Package.IsLatestVersion select p;
-                }
-
-                return FilterOnVersion(pkgs, requiredVersion, minimumVersion, maximumVersion);                    
-            }
-            catch (Exception e) {
-                e.Dump(this);
-                return Enumerable.Empty<PackageItem>();
-            }
         }
 
         internal IEnumerable<IPackage> FilterOnName(IEnumerable<IPackage> pkgs, string name) {

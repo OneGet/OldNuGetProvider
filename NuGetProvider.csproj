@@ -10,7 +10,6 @@
     -->
     <TargetFrameworkVersion Condition="($(PSVersion.Substring(0,1)) &gt; 4) AND ($(TargetFrameworkVersion) == '' Or $(TargetFrameworkVersion) == '*Undefined*')">v4.5</TargetFrameworkVersion>
     <TargetFrameworkVersion Condition="($(PSVersion.Substring(0,1)) &lt; 5) AND ($(TargetFrameworkVersion) == '' Or $(TargetFrameworkVersion) == '*Undefined*')">v4.0</TargetFrameworkVersion>
-  
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <ProjectGuid>{6EE48B32-D449-47A5-B69F-B2D8E9BAD867}</ProjectGuid>
@@ -25,17 +24,14 @@
     <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)intermediate\$(TargetFrameworkVersion.Replace(".",""))\$(Configuration)\$(AssemblyName)\</BaseIntermediateOutputPath>
     <IntermediateOutputPath>$(BaseIntermediateOutputPath)</IntermediateOutputPath>
     <DocumentationFile>$(OutputPath)$(AssemblyName).XML</DocumentationFile>
-    
     <Prefer32Bit>false</Prefer32Bit>
     <NoWarn>1591,3002,3003,3008,3009</NoWarn>
     <RestorePackages>true</RestorePackages>
     <DefineConstants>FRAMEWORK$(TargetFrameworkVersion.Replace(".",""))</DefineConstants>
     <OutputRelativePath>output\$(TargetFrameworkVersion.Replace(".",""))\$(Configuration)\bin\</OutputRelativePath>
-    
     <StartAction>Program</StartAction>
     <StartProgram>c:\windows\system32\windowspowerShell\v1.0\powershell.exe</StartProgram>
     <StartArguments>-noexit %24debugPreference = %27Continue%27 %3b get-packageprovider -verbose</StartArguments>
-
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
@@ -81,10 +77,12 @@
     <Compile Include="Common\EnvironmentUtility.cs" />
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="Common\ImplictLazy.cs" />
+    <Compile Include="Common\MutableEnumerable.cs" />
     <Compile Include="Common\NativeMethods.cs" />
     <Compile Include="Common\PackageItem.cs" />
     <Compile Include="Common\PackageSource.cs" />
     <Compile Include="Common\CommonRequest.cs" />
+    <Compile Include="Common\ReEnumerable.cs" />
     <Compile Include="Nuget\NuGetProvider.cs" />
     <Compile Include="Nuget\NuGetRequest.cs" />
     <Compile Include="Platform\CLSID.cs" />

@@ -205,6 +205,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 maximumVersion = maximumVersion.FixVersion();
             }
 
+
             if (!IsValidVersionRange(minimumVersion, maximumVersion))
             {
                 request.Error(ErrorCategory.InvalidArgument, minimumVersion+maximumVersion, Constants.Messages.InvalidVersionRange, minimumVersion, maximumVersion);
@@ -212,10 +213,8 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             }
             // get the package by ID first.
             // if there are any packages, yield and return
-            IEnumerable<PackageItem> pkgs = request.GetPackageById(name);
-            if (!pkgs.IsEmpty())
-            {                
-                request.YieldPackages(request.FilterPackageByVersion(pkgs, requiredVersion, minimumVersion, maximumVersion), name);                
+            if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name) || request.FoundPackageById) {
+                // if we actaully found some by that id, but didn't make it past the filter, we're done.
                 return;
             }
 
