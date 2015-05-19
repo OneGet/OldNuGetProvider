@@ -11,18 +11,12 @@ build:
   verbosity: minimal
 after_build:
 - ps: >-
-    echo $env:APPVEYOR_BUILD_VERSION
-
     Get-ChildItem .\output\v40\release\signed\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name -DeploymentName releasebits -Type Auto }
 before_test:
 - ps: 
 after_test:
 - ps: "#ipmo PackageManagement\n#$debugPreference = 'Continue'\n#get-packageprovider -verbose \n#find-package -provider nuget zlib -source http://nuget.org/api/v2"
-artifacts:
-- path: output\v40\release\signed\*
-  name: releasebits
-- path: '*'
-  name: releasebits
+
 deploy:
 - provider: AzureBlob
   storage_account_name: oneget
