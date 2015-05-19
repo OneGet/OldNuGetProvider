@@ -128,7 +128,7 @@
         
         $filepath = resolve-path  "$(MSBuildThisFileDirectory)\provider.manifest"
         $content = (get-content -raw $filepath ) 
-        $content = $content -replace "version='.*'","version='$v'"
+        $content = $content -replace "\s+version='.*'","    version='$v'"
         $content = $content -replace "uniqueId='.*'","uniqueId='nuget.$v'"
         $content = $content -replace "providerVersion='.*'","providerVersion='$v'"
         $content = $content -replace "href='.*'","href='https://oneget.org/nuget-anycpu-$v.exe'"
