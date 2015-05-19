@@ -1,0 +1,34 @@
+version: 2.8.5.{build}
+configuration: Release
+platform: Any CPU
+environment:
+  OUTERCURVE_TOKEN:
+    secure: leRBLbJRh/JYUjaqJhQ4/w==
+before_build:
+- ps: .\libs\nuget.exe restore
+build:
+  project: NuGetProvider.csproj
+  verbosity: minimal
+after_build:
+- ps: >-
+    echo $env:APPVEYOR_BUILD_VERSION
+
+    Get-ChildItem .\output\v40\release\signed\* | % { Push-AppveyorArtifact $_.FullName -FileName $_.Name -DeploymentName releasebits -Type Auto }
+before_test:
+- ps: 
+after_test:
+- ps: "#ipmo PackageManagement\n#$debugPreference = 'Continue'\n#get-packageprovider -verbose \n#find-package -provider nuget zlib -source http://nuget.org/api/v2"
+artifacts:
+- path: output\v40\release\signed\*
+  name: releasebits
+- path: '*'
+  name: releasebits
+deploy:
+- provider: AzureBlob
+  storage_account_name: oneget
+  storage_access_key:
+    secure: ZuCMaWhHvUIQNvY5S/jhzT/FJYFTV0gjHu+kj+hNVPE/4GE2rohMqfwTOdnN+Ygff4oCFMPdw6RprKvBam+RIoW9IRwr1XoFV+HWrQxuhvrTL5H2rS0WFOBEVO6JOOJ7
+  container: providers
+  artifact: releasebits
+  unzip: true
+  set_content_type: true
