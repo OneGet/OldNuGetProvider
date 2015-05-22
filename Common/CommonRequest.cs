@@ -509,21 +509,21 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         }
 
         internal IEnumerable<IPackage> FilterOnName(IEnumerable<IPackage> pkgs, string name) {
-            return pkgs.Where(each => each.Id.IndexOf(name, StringComparison.OrdinalIgnoreCase) > -1);
+            return pkgs.Where(each => each.Id != null && each.Id.IndexOf(name, StringComparison.OrdinalIgnoreCase) > -1);
         }
 
         internal IEnumerable<IPackage> FilterOnTags(IEnumerable<IPackage> pkgs) {
             if (FilterOnTag == null || FilterOnTag.Value.Length == 0) {
                 return pkgs;
             }
-            return pkgs.Where(each => FilterOnTag.Value.Any(tag => each.Tags.IndexOf(tag, StringComparison.OrdinalIgnoreCase) > -1));
+            return pkgs.Where(each => each.Tags != null && FilterOnTag.Value.Any(tag => each.Tags.IndexOf(tag, StringComparison.OrdinalIgnoreCase) > -1));
         }
 
         internal IEnumerable<IPackage> FilterOnContains(IEnumerable<IPackage> pkgs) {
             if (string.IsNullOrEmpty(Contains)) {
                 return pkgs;
             }
-            return pkgs.Where(each => each.Description.IndexOf(Contains, StringComparison.OrdinalIgnoreCase) > -1 || each.Id.IndexOf(Contains, StringComparison.OrdinalIgnoreCase) > -1);
+            return pkgs.Where(each => (each.Description != null && each.Description.IndexOf(Contains, StringComparison.OrdinalIgnoreCase) > -1) || (each.Id != null && each.Id.IndexOf(Contains, StringComparison.OrdinalIgnoreCase) > -1));
         }
 
         internal PackageItem GetPackageByFilePath(string filePath) {
