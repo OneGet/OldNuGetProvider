@@ -701,15 +701,6 @@ namespace Microsoft.PackageManagement.NuGetProvider {
                         }
                     }
                     return packageIds.SelectMany(packageId => GetPackageById(source, packageId, requiredVersion, minimumVersion, maximumVersion));
-                    // return packageIds.SelectMany(packageId => SearchSourceForPackages(source, packageId, requiredVersion, minimumVersion, maximumVersion));
-                    // return packageIds.SelectMany(packageId => FindPackageByNameFirst(source, packageId, requiredVersion, minimumVersion, maximumVersion));
-                    // return SearchSourceForPackages(source.Location, requiredVersion, minimumVersion, maximumVersion);
-                    /* return FilterOnVersion(source.Repository.FindPackages(packageIds), requiredVersion, minimumVersion, maximumVersion)
-                        .Select(pkg => new PackageItem {
-                            Package = pkg,
-                            PackageSource = source,
-                            FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
-                        });*/
                 }
             } catch (Exception e) {
                 e.Dump(this);
