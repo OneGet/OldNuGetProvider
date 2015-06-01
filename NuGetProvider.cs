@@ -130,15 +130,15 @@ namespace Microsoft.PackageManagement.NuGetProvider {
         ///     CORE and HOST
         /// </param>
         public void AddPackageSource(string name, string location, bool trusted, NuGetRequest request) {
-            string name1 = name;
+            
             // Nice-to-have put a debug message in that tells what's going on.
-            request.Debug("Calling '{0}::AddPackageSource' '{1}','{2}','{3}'", PackageProviderName, name1, location, trusted);
+            request.Debug("Calling '{0}::AddPackageSource' '{1}','{2}','{3}'", PackageProviderName, name, location, trusted);
 
             // if they didn't pass in a name, use the location as a name. (if you support that kind of thing)
-            name1 = string.IsNullOrEmpty(name1) ? location : name1;
+            name = string.IsNullOrEmpty(name) ? location : name;
 
             // let's make sure that they've given us everything we need.
-            if (string.IsNullOrEmpty(name1)) {
+            if (string.IsNullOrEmpty(name)) {
                 request.Error(ErrorCategory.InvalidArgument, Constants.Parameters.Name, Constants.Messages.MissingRequiredParameter, Constants.Parameters.Name);
                 // we're done here.
                 return;
@@ -160,11 +160,11 @@ namespace Microsoft.PackageManagement.NuGetProvider {
 
             // check first that we're not clobbering an existing source, unless this is an update
 
-            var src = request.FindRegisteredSource(name1);
+            var src = request.FindRegisteredSource(name);
 
             if (src != null && !isUpdate) {
                 // tell the user that there's one here already
-                request.Error(ErrorCategory.InvalidArgument, name1 ?? location, Constants.Messages.PackageSourceExists, name1 ?? location);
+                request.Error(ErrorCategory.InvalidArgument, name ?? location, Constants.Messages.PackageSourceExists, name ?? location);
                 // we're done here.
                 return;
             }
@@ -172,7 +172,7 @@ namespace Microsoft.PackageManagement.NuGetProvider {
             // conversely, if it didn't find one, and it is an update, that's bad too:
             if (src == null && isUpdate) {
                 // you can't find that package source? Tell that to the user
-                request.Error(ErrorCategory.ObjectNotFound, name1 ?? location, Constants.Messages.UnableToResolveSource, name1 ?? location);
+                request.Error(ErrorCategory.ObjectNotFound, name ?? location, Constants.Messages.UnableToResolveSource, name ?? location);
                 // we're done here.
                 return;
             }
@@ -189,7 +189,7 @@ namespace Microsoft.PackageManagement.NuGetProvider {
                 validated = request.ValidateSourceLocation(location);
 
                 if (!validated) {
-                    request.Error(ErrorCategory.InvalidData, name1 ?? location, Constants.Messages.SourceLocationNotValid, location);
+                    request.Error(ErrorCategory.InvalidData, name ?? location, Constants.Messages.SourceLocationNotValid, location);
                     // we're done here.
                     return;
                 }
@@ -205,13 +205,13 @@ namespace Microsoft.PackageManagement.NuGetProvider {
             // looking good -- store the package source
             // todo: create the package source (and store it whereever you store it)
 
-            request.Verbose("Storing package source {0}", name1);
+            request.Verbose("Storing package source {0}", name);
 
             // actually yielded by the implementation.
-            request.AddPackageSource(name1, location, trusted, validated);
+            request.AddPackageSource(name, location, trusted, validated);
 
             // and, before you go, Yield the package source back to the caller.
-            if (!request.YieldPackageSource(name1, location, trusted, true /*since we just registered it*/, validated)) {
+            if (!request.YieldPackageSource(name, location, trusted, true /*since we just registered it*/, validated)) {
                 // always check the return value of a yield, since if it returns false, you don't keep returning data
                 // this can happen if they have cancelled the operation.
                 return;
@@ -266,36 +266,34 @@ namespace Microsoft.PackageManagement.NuGetProvider {
         /// <param name="request"></param>
         /// <returns></returns>
         public void FindPackage(string name, string requiredVersion, string minimumVersion, string maximumVersion, int id, NuGetRequest request) {
-            string requiredVersion1 = requiredVersion;
-            string minimumVersion1 = minimumVersion;
-            string maximumVersion1 = maximumVersion;
+            
             // Nice-to-have put a debug message in that tells what's going on.
-            request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion1, minimumVersion1, maximumVersion1, id);
+            request.Debug("Calling '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
 
-            requiredVersion1 = requiredVersion1.FixVersion();
-            if (!string.IsNullOrEmpty(requiredVersion1)) {
-                if (request.FindByCanonicalId && requiredVersion1.IndexOfAny("()[],".ToCharArray()) == -1) {
+            requiredVersion = requiredVersion.FixVersion();
+            if (!string.IsNullOrEmpty(requiredVersion)) {
+                if (request.FindByCanonicalId && requiredVersion.IndexOfAny("()[],".ToCharArray()) == -1) {
                     // when resolving packages via a canonical id, treat a lone version (ie  1.0  ->  1.0 <= x) string as a nuget version range:
-                    minimumVersion1 = requiredVersion1;
-                    maximumVersion1 = null;
-                    requiredVersion1 = null;
+                    minimumVersion = requiredVersion;
+                    maximumVersion = null;
+                    requiredVersion = null;
                 } else {
-                    minimumVersion1 = null;
-                    maximumVersion1 = null;
+                    minimumVersion = null;
+                    maximumVersion = null;
                 }
             } else {
-                minimumVersion1 = minimumVersion1.FixVersion();
-                maximumVersion1 = maximumVersion1.FixVersion();
+                minimumVersion = minimumVersion.FixVersion();
+                maximumVersion = maximumVersion.FixVersion();
             }
 
-            if (!IsValidVersionRange(minimumVersion1, maximumVersion1)) {
-                request.Error(ErrorCategory.InvalidArgument, minimumVersion1 + maximumVersion1, Constants.Messages.InvalidVersionRange, minimumVersion1, maximumVersion1);
+            if (!IsValidVersionRange(minimumVersion, maximumVersion)) {
+                request.Error(ErrorCategory.InvalidArgument, minimumVersion + maximumVersion, Constants.Messages.InvalidVersionRange, minimumVersion, maximumVersion);
                 return;
             }
             // get the package by ID first.
             // if there are any packages, yield and return
             if (!string.IsNullOrWhiteSpace(name)) {
-                if (request.YieldPackages(request.GetPackageById(name, requiredVersion1, minimumVersion1, maximumVersion1), name) || request.FoundPackageById) {
+                if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name) || request.FoundPackageById) {
                     // if we actaully found some by that id, but didn't make it past the filter, we're done.
                     return;
                 }
@@ -306,8 +304,8 @@ namespace Microsoft.PackageManagement.NuGetProvider {
             }
 
             // Try searching for matches and returning those.
-            request.YieldPackages(request.SearchForPackages(name, requiredVersion1, minimumVersion1, maximumVersion1), name);
-            request.Debug("Finished '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion1, minimumVersion1, maximumVersion1, id);
+            request.YieldPackages(request.SearchForPackages(name, requiredVersion, minimumVersion, maximumVersion), name);
+            request.Debug("Finished '{0}::FindPackage' '{1}','{2}','{3}','{4}','{5}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion, id);
         }
 
         /// <summary>
@@ -439,21 +437,20 @@ namespace Microsoft.PackageManagement.NuGetProvider {
         ///     the CORE and HOST
         /// </param>
         public void GetInstalledPackages(string name, string requiredVersion, string minimumVersion, string maximumVersion, NuGetRequest request) {
-            string minimumVersion1 = minimumVersion;
-            string maximumVersion1 = maximumVersion;
+            
             // Nice-to-have put a debug message in that tells what's going on.
-            request.Debug("Calling '{0}::GetInstalledPackages' '{1}','{2}','{3}','{4}'", PackageProviderName, name, requiredVersion, minimumVersion1, maximumVersion1);
+            request.Debug("Calling '{0}::GetInstalledPackages' '{1}','{2}','{3}','{4}'", PackageProviderName, name, requiredVersion, minimumVersion, maximumVersion);
 
             if (requiredVersion != null) {
-                minimumVersion1 = null;
-                maximumVersion1 = null;
+                minimumVersion = null;
+                maximumVersion = null;
             } else {
-                minimumVersion1 = minimumVersion1.FixVersion();
-                maximumVersion1 = maximumVersion1.FixVersion();
+                minimumVersion = minimumVersion.FixVersion();
+                maximumVersion = maximumVersion.FixVersion();
             }
 
-            if (!IsValidVersionRange(minimumVersion1, maximumVersion1)) {
-                request.Error(ErrorCategory.InvalidArgument, minimumVersion1 + maximumVersion1, Constants.Messages.InvalidVersionRange, minimumVersion1, maximumVersion1);
+            if (!IsValidVersionRange(minimumVersion, maximumVersion)) {
+                request.Error(ErrorCategory.InvalidArgument, minimumVersion + maximumVersion, Constants.Messages.InvalidVersionRange, minimumVersion, maximumVersion);
                 return;
             }
 
@@ -472,10 +469,10 @@ namespace Microsoft.PackageManagement.NuGetProvider {
                                     continue;
                                 }
                             } else {
-                                if (!string.IsNullOrWhiteSpace(minimumVersion1) && pkgItem.Package.Version < new SemanticVersion(minimumVersion1)) {
+                                if (!string.IsNullOrWhiteSpace(minimumVersion) && pkgItem.Package.Version < new SemanticVersion(minimumVersion)) {
                                     continue;
                                 }
-                                if (!string.IsNullOrWhiteSpace(maximumVersion1) && pkgItem.Package.Version < new SemanticVersion(maximumVersion1)) {
+                                if (!string.IsNullOrWhiteSpace(maximumVersion) && pkgItem.Package.Version < new SemanticVersion(maximumVersion)) {
                                     continue;
                                 }
                             }
