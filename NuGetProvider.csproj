@@ -142,6 +142,7 @@
       $newver = "version='$version'"
       
       $newContent = (get-content -raw $manifestfile ) -replace "version='.*'",$newver
+      $newContent = $newContent -replace "providerversion","providerVersion"
       $newContent = $newContent.Trim();
       set-content $manifestfile $newcontent 
       
