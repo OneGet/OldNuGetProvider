@@ -14,7 +14,7 @@
 
   <Meta
       providerName="nuget"
-      providerVersion='2.8.5.113'
+      providerversion='2.8.5.113'
       summary="NuGet provider for the OneGet meta-package manager"
   />
 

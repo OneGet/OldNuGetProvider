@@ -213,11 +213,12 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             }
             // get the package by ID first.
             // if there are any packages, yield and return
-            if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name) || request.FoundPackageById) {
-                // if we actaully found some by that id, but didn't make it past the filter, we're done.
-                return;
+            if (!string.IsNullOrWhiteSpace(name)) { 
+                if (request.YieldPackages(request.GetPackageById(name, requiredVersion, minimumVersion, maximumVersion), name) || request.FoundPackageById) {
+                    // if we actaully found some by that id, but didn't make it past the filter, we're done.
+                    return;
+                }
             }
-
             // have we been cancelled?
             if (request.IsCanceled) {
                 return;
