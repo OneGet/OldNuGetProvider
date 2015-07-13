@@ -128,7 +128,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             }
         }
 
-        public static void Dump(this Exception e, CommonRequest request) {
+        public static void Dump(this Exception e, NuGetRequest request) {
             var text = string.Format("{0}//{1}/{2}\r\n{3}", AppDomain.CurrentDomain.FriendlyName, e.GetType().Name, e.Message, e.StackTrace);
             request.Verbose("Exception : {0}", text);
         }

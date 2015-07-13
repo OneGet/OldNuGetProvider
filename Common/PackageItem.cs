@@ -114,7 +114,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             }
         }
 
-        internal string GetCanonicalId(CommonRequest request) {
+        internal string GetCanonicalId(NuGetRequest request) {
             return _canonicalId ?? (_canonicalId = request.ProviderServices.GetCanonicalPackageId(request.PackageProviderName, Id, Version, PackageSource == null ? null : PackageSource.Location));
         }
     }

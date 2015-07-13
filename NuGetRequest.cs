@@ -12,23 +12,33 @@
 //  limitations under the License.
 //  
 
-namespace Microsoft.PackageManagement.NuGetProvider.Common {
+namespace Microsoft.PackageManagement.NuGetProvider {
     using System;
     using System.Collections;
     using System.Collections.Generic;
     using System.IO;
     using System.Linq;
     using System.Management.Automation;
+    using System.Text;
     using System.Text.RegularExpressions;
     using System.Threading.Tasks;
+    using System.Xml.Linq;
+    using System.Xml.XPath;
+    using Common;
     using NuGet;
     using Sdk;
-    using Utility.Platform;
     using Constants = Sdk.Constants;
     using ErrorCategory = Sdk.ErrorCategory;
+    using PackageSource = Common.PackageSource;
 
-    public abstract class CommonRequest : Request {
+    public abstract class NuGetRequest : Request {
         internal const string MultiplePackagesInstalledExpectedOne = "MSG:MultiplePackagesInstalledExpectedOne_package";
+        internal const string DefaultConfig = @"<?xml version=""1.0""?>
+<configuration>
+  <packageSources>
+    <add key=""nuget.org"" value=""https://www.nuget.org/api/v2/"" />
+  </packageSources>
+</configuration>";
         private static readonly Regex _rxFastPath = new Regex(@"\$(?<source>[\w,\+,\/,=]*)\\(?<id>[\w,\+,\/,=]*)\\(?<version>[\w,\+,\/,=]*)\\(?<sources>[\w,\+,\/,=]*)");
         private static readonly Regex _rxPkgParse = new Regex(@"'(?<pkgId>\S*)\s(?<ver>.*?)'");
         protected string _configurationFileLocation;
@@ -39,12 +49,13 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
         internal ImplictLazy<bool> ExcludeVersion;
         internal ImplictLazy<string[]> FilterOnTag;
         internal ImplictLazy<bool> FindByCanonicalId;
+        internal bool FoundPackageById;
         internal string[] OriginalSources;
         internal ImplictLazy<string> PackageSaveMode;
         internal ImplictLazy<bool> SkipDependencies;
         internal ImplictLazy<bool> SkipValidate;
 
-        protected CommonRequest() {
+        protected NuGetRequest() {
             FilterOnTag = new ImplictLazy<string[]>(() => (GetOptionValues("FilterOnTag") ?? new string[0]).ToArray());
             Contains = new ImplictLazy<string>(() => GetOptionValue("Contains"));
             SkipValidate = new ImplictLazy<bool>(() => GetOptionValue("SkipValidate").IsTrue());
@@ -62,12 +73,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 return sm;
             });
         }
-
-        public abstract string PackageProviderName {get;}
-        internal abstract IEnumerable<string> SupportedSchemes {get;}
-        protected abstract string ConfigurationFileLocation {get;}
-        internal abstract string Destination {get;}
-        internal abstract IDictionary<string, PackageSource> RegisteredPackageSources {get;}
 
         internal IEnumerable<PackageSource> SelectedSources {
             get {
@@ -89,10 +94,8 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 foreach (var src in sources) {
                     // check to see if we have a source with either that name
                     // or that URI first.
-                    if (pkgSources.ContainsKey(src))
-                    {
-                        if (!usedPkgSourceKeys.Contains(src))
-                        {
+                    if (pkgSources.ContainsKey(src)) {
+                        if (!usedPkgSourceKeys.Contains(src)) {
                             usedPkgSourceKeys.Add(src);
                             yield return pkgSources[src];
                             continue;
@@ -101,10 +104,8 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
 
                     var srcLoc = src;
                     var found = false;
-                    foreach (var byLoc in pkgSources.Where(each => each.Value.Location == srcLoc))
-                    {
-                        if (!usedPkgSourceKeys.Contains(byLoc.Key))
-                        {
+                    foreach (var byLoc in pkgSources.Where(each => each.Value.Location == srcLoc)) {
+                        if (!usedPkgSourceKeys.Contains(byLoc.Key)) {
                             usedPkgSourceKeys.Add(byLoc.Key);
                             yield return byLoc.Value;
                             found = true;
@@ -170,8 +171,93 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             }
         }
 
-        internal abstract void RemovePackageSource(string id);
-        internal abstract void AddPackageSource(string name, string location, bool isTrusted, bool isValidated);
+        public string PackageProviderName {
+            get {
+                return NuGetProvider.ProviderName;
+            }
+        }
+
+        internal IEnumerable<string> SupportedSchemes {
+            get {
+                return NuGetProvider.Features[Constants.Features.SupportedSchemes];
+            }
+        }
+
+        internal string Destination {
+            get {
+                return Path.GetFullPath(GetOptionValue("Destination"));
+            }
+        }
+
+        internal XDocument Config {
+            get {
+                try {
+                    var doc = XDocument.Load((string)ConfigurationFileLocation);
+                    if (doc.Root != null && doc.Root.Name == "configuration") {
+                        return doc;
+                    }
+                    // doc root isn't right. make a new one!
+                } catch {
+                    // a bad xml doc.
+                }
+                return XDocument.Load(new MemoryStream((byte[])Encoding.UTF8.GetBytes(DefaultConfig)));
+            }
+            set {
+                if (value == null) {
+                    return;
+                }
+
+                Verbose("Saving NuGet Config {0}", ConfigurationFileLocation);
+
+                CreateFolder(Path.GetDirectoryName(ConfigurationFileLocation));
+                value.Save((string)ConfigurationFileLocation);
+            }
+        }
+
+        internal IDictionary<string, PackageSource> RegisteredPackageSources {
+            get {
+                try {
+                    return Config.XPathSelectElements("/configuration/packageSources/add")
+                        .Where(each => each.Attribute("key") != null && each.Attribute("value") != null)
+                        .ToDictionaryNicely(each => each.Attribute("key").Value, each => new PackageSource {
+                            Name = each.Attribute("key").Value,
+                            Location = each.Attribute("value").Value,
+                            Trusted = each.Attributes("trusted").Any() && each.Attribute("trusted").Value.IsTrue(),
+                            IsRegistered = true,
+                            IsValidated = each.Attributes("validated").Any() && each.Attribute("validated").Value.IsTrue(),
+                        }, StringComparer.OrdinalIgnoreCase);
+                } catch (Exception e) {
+                    e.Dump(this);
+                }
+                return new Dictionary<string, PackageSource>(StringComparer.OrdinalIgnoreCase) {
+                    {
+                        "nuget.org", new PackageSource {
+                            Name = "nuget.org",
+                            Location = "https://www.nuget.org/api/v2/",
+                            Trusted = false,
+                            IsRegistered = false,
+                            IsValidated = true,
+                        }
+                    }
+                };
+            }
+        }
+
+        protected string ConfigurationFileLocation {
+            get {
+                if (String.IsNullOrEmpty(_configurationFileLocation)) {
+                    // get the value from the request
+                    var path = GetOptionValue("ConfigFile");
+                    if (!String.IsNullOrEmpty(path)) {
+                        return path;
+                    }
+
+                    //otherwise, use %APPDATA%/NuGet/NuGet.Config
+                    _configurationFileLocation = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "NuGet", "NuGet.config");
+                }
+                return _configurationFileLocation;
+            }
+        }
 
         private bool LocationCloseEnoughMatch(string givenLocation, string knownLocation) {
             if (givenLocation.Equals(knownLocation, StringComparison.OrdinalIgnoreCase)) {
@@ -320,7 +406,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
 
         internal IEnumerable<PackageItem> FilterOnVersion(IEnumerable<PackageItem> pkgs, string requiredVersion, string minimumVersion, string maximumVersion) {
             if (!String.IsNullOrEmpty(requiredVersion)) {
-                pkgs = pkgs.Where(each =>  new SemanticVersion(each.Version) == new SemanticVersion(requiredVersion));
+                pkgs = pkgs.Where(each => new SemanticVersion(each.Version) == new SemanticVersion(requiredVersion));
             } else {
                 if (!String.IsNullOrEmpty(minimumVersion)) {
                     pkgs = pkgs.Where(each => new SemanticVersion(each.Version) >= new SemanticVersion(minimumVersion));
@@ -453,8 +539,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             return foundPackage;
         }
 
-        internal bool FoundPackageById;
-
         internal IEnumerable<PackageItem> GetPackageById(PackageSource source, string name, string requiredVersion = null, string minimumVersion = null, string maximumVersion = null, bool allowUnlisted = false) {
             try {
                 if (!string.IsNullOrWhiteSpace(requiredVersion) && requiredVersion.IndexOfAny(new char[] {'[', ']', '(', ')'}) > -1) {
@@ -476,23 +560,23 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                 // search by package id without version
                 // then apply whatever filters are required.
                 IEnumerable<IPackage> pkgs = source.Repository.FindPackagesById(name).ReEnumerable();
-                if (pkgs.Any()){
+                if (pkgs.Any()) {
                     // this meas that we actually found an exact package name match, which is important
                     // so we can not do a search later.
                     FoundPackageById = true;
 
-                    if (!AllVersions && (String.IsNullOrEmpty(requiredVersion) && String.IsNullOrEmpty(minimumVersion) && String.IsNullOrEmpty(maximumVersion))) {  
-                        pkgs = from p in pkgs where p.IsLatestVersion select p;  
-                    }  
-  
-                    pkgs = FilterOnContains(pkgs);  
+                    if (!AllVersions && (String.IsNullOrEmpty(requiredVersion) && String.IsNullOrEmpty(minimumVersion) && String.IsNullOrEmpty(maximumVersion))) {
+                        pkgs = from p in pkgs where p.IsLatestVersion select p;
+                    }
+
+                    pkgs = FilterOnContains(pkgs);
                     pkgs = FilterOnTags(pkgs);
-                    
+
                     return FilterOnVersion(pkgs, requiredVersion, minimumVersion, maximumVersion)
                         .Select(pkg => new PackageItem {
-                              Package = pkg,  
-                              PackageSource = source,  
-                              FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())  
+                            Package = pkg,
+                            PackageSource = source,
+                            FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
                         });
                 }
             } catch (Exception e) {
@@ -617,15 +701,6 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                         }
                     }
                     return packageIds.SelectMany(packageId => GetPackageById(source, packageId, requiredVersion, minimumVersion, maximumVersion));
-                    // return packageIds.SelectMany(packageId => SearchSourceForPackages(source, packageId, requiredVersion, minimumVersion, maximumVersion));
-                    // return packageIds.SelectMany(packageId => FindPackageByNameFirst(source, packageId, requiredVersion, minimumVersion, maximumVersion));
-                    // return SearchSourceForPackages(source.Location, requiredVersion, minimumVersion, maximumVersion);
-                    /* return FilterOnVersion(source.Repository.FindPackages(packageIds), requiredVersion, minimumVersion, maximumVersion)
-                        .Select(pkg => new PackageItem {
-                            Package = pkg,
-                            PackageSource = source,
-                            FastPath = MakeFastPath(source, pkg.Id, pkg.Version.ToString())
-                        });*/
                 }
             } catch (Exception e) {
                 e.Dump(this);
@@ -828,19 +903,19 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             }).OrderByDescending(each => each.Package.Version);
         }
 
-        internal virtual bool PreInstall(PackageItem packageItem) {
+        internal bool PreInstall(PackageItem packageItem) {
             return true;
         }
 
-        internal virtual bool PostInstall(PackageItem packageItem) {
+        internal bool PostInstall(PackageItem packageItem) {
             return true;
         }
 
-        internal virtual bool PreUninstall(PackageItem packageItem) {
+        internal bool PreUninstall(PackageItem packageItem) {
             return true;
         }
 
-        internal virtual bool PostUninstall(PackageItem packageItem) {
+        internal bool PostUninstall(PackageItem packageItem) {
             return true;
         }
 
@@ -901,64 +976,7 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
             return true;
         }
 
-        public void AddPinnedItemToTaskbar(string item) {
-            if (!IsCanceled) {
-                Debug("Calling 'ProviderService::AddPinnedItemToTaskbar'");
-                ShellApplication.Pin(item);
-            }
-        }
-
-        public void RemovePinnedItemFromTaskbar(string item) {
-            if (!IsCanceled) {
-                Debug("Calling 'ProviderService::RemovePinnedItemFromTaskbar'");
-                ShellApplication.Unpin(item);
-            }
-        }
-
-        public void CreateShortcutLink(string linkPath, string targetPath, string description, string workingDirectory, string arguments) {
-            if (!IsCanceled) {
-                Debug("Calling 'ProviderService::CreateShortcutLink'");
-
-                if (File.Exists(linkPath)) {
-                    Verbose("Creating Shortcut '{0}' => '{1}'", linkPath, targetPath);
-                    ShellLink.CreateShortcut(linkPath, targetPath, description, workingDirectory, arguments);
-                }
-                Error(ErrorCategory.InvalidData, targetPath, Constants.Messages.UnableToCreateShortcutTargetDoesNotExist, targetPath);
-            }
-        }
-
-        public void CopyFile(string sourcePath, string destinationPath) {
-            if (!IsCanceled) {
-                Debug("Calling 'ProviderService::CopyFile'");
-                if (sourcePath == null) {
-                    throw new ArgumentNullException("sourcePath");
-                }
-                if (destinationPath == null) {
-                    throw new ArgumentNullException("destinationPath");
-                }
-                if (File.Exists(destinationPath)) {
-                    destinationPath.TryHardToDelete();
-                    if (File.Exists(destinationPath)) {
-                        Error(ErrorCategory.OpenError, destinationPath, Constants.Messages.UnableToOverwriteExistingFile, destinationPath);
-                    }
-                }
-                File.Copy(sourcePath, destinationPath);
-                if (!File.Exists(destinationPath)) {
-                    Error(ErrorCategory.InvalidResult, destinationPath, Constants.Messages.UnableToCopyFileTo, destinationPath);
-                }
-            }
-        }
-
-        public void Delete(string path) {
-            if (!IsCanceled) {
-                Debug("Calling 'ProviderService::Delete'");
-                if (String.IsNullOrWhiteSpace(path)) {
-                    return;
-                }
-
-                path.TryHardToDelete();
-            }
-        }
+    
 
         public void DeleteFolder(string folder) {
             if (!IsCanceled) {
@@ -987,6 +1005,39 @@ namespace Microsoft.PackageManagement.NuGetProvider.Common {
                     }
                 }
                 Verbose("CreateFolder -- Already Exists {0}", folder);
+            }
+        }
+
+        internal void RemovePackageSource(string id) {
+            var config = Config;
+            var source = config.XPathSelectElements(String.Format("/configuration/packageSources/add[@key='{0}']", id)).FirstOrDefault();
+            if (source != null) {
+                source.Remove();
+                Config = config;
+            }
+        }
+
+        internal void AddPackageSource(string name, string location, bool isTrusted, bool isValidated) {
+            if (SkipValidate || ValidateSourceLocation(location)) {
+                var config = Config;
+                var sources = config.XPathSelectElements("/configuration/packageSources").FirstOrDefault();
+                if (sources == null) {
+                    config.Root.Add(sources = new XElement("packageSources"));
+                }
+                var source = new XElement("add");
+                source.SetAttributeValue("key", name);
+                source.SetAttributeValue("value", location);
+                if (isValidated) {
+                    source.SetAttributeValue("validated", true);
+                }
+                if (isTrusted) {
+                    source.SetAttributeValue("trusted", true);
+                }
+                sources.Add(source);
+                Config = config;
+
+                //Yield this from the provider object.
+                //YieldPackageSource(name, location, isTrusted, true, isValidated);
             }
         }
 

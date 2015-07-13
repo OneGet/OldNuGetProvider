@@ -68,12 +68,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="assembly-version.cs" />
-    <Compile Include="Chocolatey\ChocolateyProvider.cs" />
-    <Compile Include="Chocolatey\ChocolateyRequest.cs" />
-    <Compile Include="Chocolatey\ChocolateyScript.cs" />
-    <Compile Include="Chocolatey\Snapshot.cs" />
     <Compile Include="Common\AsyncProcess.cs" />
-    <Compile Include="Common\CommonProvider.cs" />
+    <Compile Include="NuGetProvider.cs" />
     <Compile Include="Common\EnvironmentUtility.cs" />
     <Compile Include="Common\Extensions.cs" />
     <Compile Include="Common\ImplictLazy.cs" />
@@ -81,19 +77,8 @@
     <Compile Include="Common\NativeMethods.cs" />
     <Compile Include="Common\PackageItem.cs" />
     <Compile Include="Common\PackageSource.cs" />
-    <Compile Include="Common\CommonRequest.cs" />
+    <Compile Include="NuGetRequest.cs" />
     <Compile Include="Common\ReEnumerable.cs" />
-    <Compile Include="Nuget\NuGetProvider.cs" />
-    <Compile Include="Nuget\NuGetRequest.cs" />
-    <Compile Include="Platform\CLSID.cs" />
-    <Compile Include="Platform\IID.cs" />
-    <Compile Include="Platform\IShellLink.cs" />
-    <Compile Include="Platform\ShellApplication.cs" />
-    <Compile Include="Platform\ShellLink.cs" />
-    <Compile Include="Platform\ShellLinkClass.cs" />
-    <Compile Include="Platform\SLGP.cs" />
-    <Compile Include="Platform\STGM.cs" />
-    <Compile Include="Platform\Win32FindData.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Resources\Messages.Designer.cs" />
     <Compile Include="Sdk\Constants.cs" />
@@ -104,7 +89,6 @@
     <EmbeddedResource Include="Resources\Messages.resx" />
   </ItemGroup>
   <ItemGroup>
-    <EmbeddedResource Include="Chocolatey\ChocolateyHelpers.psm1" />
     <None Include="provider.manifest" />
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
@@ -158,6 +142,7 @@
       $newver = "version='$version'"
       
       $newContent = (get-content -raw $manifestfile ) -replace "version='.*'",$newver
+      $newContent = $newContent -replace "providerversion","providerVersion"
       $newContent = $newContent.Trim();
       set-content $manifestfile $newcontent 
       
